@@ -6,7 +6,7 @@ Simple Commander API
 Overview
 ********
 
-The goal of the Nav2 Simple (Python3) Commander is to provide a "navigation as a library" capability to Python3 users. We provide an API that handles all the ROS 2 and Action Server tasks for you such that you can focus on building an application leveraging the capabilities of Nav2 (after you've configured it to your liking with your plugins of choice). `We also provide you with demos and examples of API usage <https://github.com/ros-planning/navigation2/tree/main/nav2_simple_commander>`_ to build common basic capabilities in autonomous mobile robotics in the ``nav2_simple_commander`` package.
+The goal of the Nav2 Simple (Python3) Commander is to provide a "navigation as a library" capability to Python3 users. We provide an API that handles all the ROS 2 and Action Server tasks for you such that you can focus on building an application leveraging the capabilities of Nav2 (after you've configured it to your liking with your plugins of choice). `We also provide you with demos and examples of API usage <https://github.com/ros-navigation/navigation2/tree/main/nav2_simple_commander>`_ to build common basic capabilities in autonomous mobile robotics in the ``nav2_simple_commander`` package.
 
 A simple demonstration is shown below. Note: ``goToPose()``, ``goThroughPoses()``, ``followWaypoints()`` and similar are **non-blocking** such that you can receive and process feedback in a single-threaded application. As such while waiting for a task to be completed, the ``while not nav.isTaskComplete()`` design is necessary to poll for changes in the navigation completion, and if not complete some tasks of interest to your application (like processing feedback, doing something with the data the robot is collecting, or checking for faults).
 
@@ -14,12 +14,12 @@ You may use this simple commander preempt commands of the same type (e.g. you ca
 
 .. code-block:: python3
 
-  from nav2_simple_commander.robot_navigator import BasicNavigator
+  from nav2_simple_commander.robot_navigator import BasicNavigator, TaskResult
   import rclpy
 
   rclpy.init()
   nav = BasicNavigator()
-  
+
   # ...
 
   nav.setInitialPose(init_pose)
@@ -67,31 +67,38 @@ New as of September 2023: the simple navigator constructor will accept a `namesp
 +---------------------------------------+----------------------------------------------------------------------------+
 | goToPose(pose, behavior_tree='')      | Requests the robot to drive to a pose (``PoseStamped``).                   |
 +---------------------------------------+----------------------------------------------------------------------------+
-| followWaypoints(poses)                | Requests the robot to follow a set of waypoints (list of ``PoseStamped``). |
+| followWaypoints(poses,                | Requests the robot to follow a set of waypoints (list of ``PoseStamped``), |
+| number_of_loops=0,                    | starting at ``goal_index`` (default ``0``) and repeating                   |
+| goal_index=0)                         | ``number_of_loops`` times after the first pass (default ``0``, runs once). |
 |                                       | This will execute the chosen ``TaskExecutor`` plugin at each pose.         |
 +---------------------------------------+----------------------------------------------------------------------------+
 | followPath(path, controller_id='',    | Requests the robot to follow a path from a starting to a goal              |
-| goal_checker_id='')                   | ``PoseStamped``, ``nav_msgs/Path``.                                        |
+| goal_checker_id='',                   | ``PoseStamped``, ``nav_msgs/Path``.                                        |
+| progress_checker_id='',               |                                                                            |
+| path_handler_id='')                   |                                                                            |
 +---------------------------------------+----------------------------------------------------------------------------+
 | spin(spin_dist=1.57,                  | Requests the robot to performs an in-place rotation by a given angle.      |
-| time_allowance=10)                    |                                                                            |
+| time_allowance=10,                    |                                                                            |
+| disable_collision_checks=False)       |                                                                            |
 +---------------------------------------+----------------------------------------------------------------------------+
 | driveOnHeading(dist=0.15,             | Requests the robot to drive on heading by a given distance.                |
-| speed=0.025, time_allowance=10)       |                                                                            |
+| speed=0.025, time_allowance=10,       |                                                                            |
+| disable_collision_checks=False)       |                                                                            |
 +---------------------------------------+----------------------------------------------------------------------------+
 | backup(backup_dist=0.15,              | Requests the robot to back up by a given distance.                         |
-| backup_speed=0.025, time_allowance=10)|                                                                            |
+| backup_speed=0.025, time_allowance=10,|                                                                            |
+| disable_collision_checks=False)       |                                                                            |
 +---------------------------------------+----------------------------------------------------------------------------+
 | assistedTeleop(time_allowance=30)     | Requests the robot to run the assisted teleop action.                      |
 +---------------------------------------+----------------------------------------------------------------------------+
 | cancelTask()                          | Cancel an ongoing task, including route tasks.                             |
 +---------------------------------------+----------------------------------------------------------------------------+
-| isTaskComplete(trackingRoute=False)   | Checks if task is complete yet, times out at ``100ms``. Returns            |
-|                                       | ``True`` if completed and ``False`` if still going. If checking a route    |
-|                                       | tracking task, set default argument to ``True``.                           |
+| isTaskComplete(task=RunningTask.NONE) | Checks if task is complete yet, times out at ``100ms``. Returns            |
+|                                       | ``True`` if completed and ``False`` if still going. Provide the task ID    |
+|                                       | from the long-running task (follow path, compute and track route, etc)     |
 +---------------------------------------+----------------------------------------------------------------------------+
-| getFeedback(trackingRoute=False)      | Gets feedback from task, returns action server feedback msg.               |
-|                                       | If getting feedback on a tracking task, set default argument to ``True``.  |
+| getFeedback(task=RunningTask.NONE)    | Gets feedback from task, returns action server feedback msg.               |
+|                                       | provide the task ID for the task you are requesting.                       |
 +---------------------------------------+----------------------------------------------------------------------------+
 | getResult()                           | Gets final result of task, to be called after ``isTaskComplete``           |
 |                                       | returns ``True``. Returns action server result msg.                        |
@@ -102,6 +109,12 @@ New as of September 2023: the simple navigator constructor will accept a `namesp
 | getPathThroughPoses(start, goals,     | Gets a path through a starting to a set of goals, a list                   |
 | planner_id='', use_start=False)       | of ``PoseStamped``, ``nav_msgs/Path``.                                     |
 +---------------------------------------+----------------------------------------------------------------------------+
+| getRoute(start, goal,                 | Gets a route from a set start and goal nodeIDs or PoseStamped.             |
+| use_start=False)                      | Use Start if given, otherwises uses TF to obtain robot pose.               |
++---------------------------------------+----------------------------------------------------------------------------+
+| getAndTrackRoute(start, goal,         | Gets a route from a set of start and goal NodeIDs or PoseStamped.          |
+| use_start=False)                      | Uses start if given, otherwise uses TF to obtain the robot pose.           |
++---------------------------------------+----------------------------------------------------------------------------+
 | dockRobot(dock_pose, dock_type)       | Attempts to dock the robot at a given docking pose and type, without using |
 |                                       | docking database of known docks.                                           |
 +---------------------------------------+----------------------------------------------------------------------------+
@@ -110,9 +123,6 @@ New as of September 2023: the simple navigator constructor will accept a `namesp
 +---------------------------------------+----------------------------------------------------------------------------+
 | undockRobot(dock_type="")             | Undocks robot. If docking server instance was used to dock, type is not    |
 |                                       | required.                                                                  |
-+---------------------------------------+----------------------------------------------------------------------------+
-| getandTrackRoute(start, goal,         | Gets and tracks a sparse route and dense path from start to goal, where    |
-| use_start=False)                      | start & goal may be of type ``PoseStamped`` or ``int`` for known NodeIDs.  |
 +---------------------------------------+----------------------------------------------------------------------------+
 | smoothPath(path, smoother_id='',      | Smooths a given path of type ``nav_msgs/Path``.                            |
 | max_duration=2.0,                     |                                                                            |
@@ -126,9 +136,26 @@ New as of September 2023: the simple navigator constructor will accept a `namesp
 +---------------------------------------+----------------------------------------------------------------------------+
 | clearGlobalCostmap()                  | Clears the global costmap.                                                 |
 +---------------------------------------+----------------------------------------------------------------------------+
+| clearLocalCostmapAroundPose(          |                                                                            |
+| PoseStamped, distance)                | Clears the local costmap around given pose.                                |
++---------------------------------------+----------------------------------------------------------------------------+
+| clearGlobalCostmapAroundPose(         |                                                                            |
+| PoseStamped, distance)                | Clears the global costmap around given pose.                               |
++---------------------------------------+----------------------------------------------------------------------------+
+| clearCostmapExceptRegion(             |                                                                            |
+| distance)                             | Clears the local costmap around current robot pose.                        |
++---------------------------------------+----------------------------------------------------------------------------+
 | getGlobalCostmap()                    | Returns the global costmap, ``nav2_msgs/Costmap``.                         |
 +---------------------------------------+----------------------------------------------------------------------------+
 | getLocalCostmap()                     | Returns the local costmap, ``nav2_msgs/Costmap``.                          |
++---------------------------------------+----------------------------------------------------------------------------+
+| toggleCollisionMonitor(enable)        | Toggles the collision monitor on (`True`) or off (`False`).                |
++---------------------------------------+----------------------------------------------------------------------------+
+| followObjectByTopic(topic,            | Requests the robot to follow an object by subscribing to a given topic.    |
+| max_duration=0)                       |                                                                            |
++---------------------------------------+----------------------------------------------------------------------------+
+| followObjectByFrame(frame,            | Requests the robot to follow an object by a given frame.                   |
+| max_duration=0)                       |                                                                            |
 +---------------------------------------+----------------------------------------------------------------------------+
 | waitUntilNav2Active(                  | Blocks until Nav2 is completely online and lifecycle nodes are in the      |
 | navigator='bt_navigator',             | active state. To be used in conjunction with autostart or external         |
@@ -217,7 +244,7 @@ and calculate the cost of a Footprint in a given map.
 Examples and Demos
 ******************
 
-All of these can be found in the `package <https://github.com/ros-planning/navigation2/tree/main/nav2_simple_commander>`_.
+All of these can be found in the `package <https://github.com/ros-navigation/navigation2/tree/main/nav2_simple_commander>`_.
 
 .. image:: readme.gif
   :width: 800
@@ -230,8 +257,8 @@ The ``nav2_simple_commander`` has a few examples to highlight the API functions 
 - ``example_nav_through_poses.py`` - Demonstrates the navigate through poses capabilities of the navigator, as well as a number of auxiliary methods.
 - ``example_waypoint_follower.py`` - Demonstrates the waypoint following capabilities of the navigator, as well as a number of auxiliary methods.
 - ``example_follow_path.py`` - Demonstrates the path following capabilities of the navigator, as well as a number of auxiliary methods like path smoothing.
-- ``example_assisted_teleop.py`` - Demonstrates the assisted teleop capabilities of the navigator.  
-- ``example_route.py`` - Demonstrates the Route server capabilities of the navigator.  
+- ``example_assisted_teleop.py`` - Demonstrates the assisted teleop capabilities of the navigator.
+- ``example_route.py`` - Demonstrates the route server capabilities of the navigator.
 
 The ``nav2_simple_commander`` has a few demonstrations to highlight a couple of simple autonomy applications you can build using the API:
 

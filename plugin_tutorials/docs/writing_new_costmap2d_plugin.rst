@@ -31,7 +31,7 @@ Tutorial Steps
 -------------------------------
 
 For a demonstration, this example will create a costmap plugin that puts repeating cost gradients in the costmap.
-The annotated code for this tutorial can be found in `navigation2_tutorials <https://github.com/ros-planning/navigation2_tutorials>`_ repository as the ``nav2_gradient_costmap_plugin`` ROS 2-package.
+The annotated code for this tutorial can be found in `navigation2_tutorials <https://github.com/ros-navigation/navigation2_tutorials>`_ repository as the ``nav2_gradient_costmap_plugin`` ROS 2-package.
 Please refer to it when making your own layer plugin for Costmap2D.
 
 The plugin class ``nav2_gradient_costmap_plugin::GradientLayer`` is inherited from basic class ``nav2_costmap_2d::Layer``:
@@ -40,7 +40,7 @@ The plugin class ``nav2_gradient_costmap_plugin::GradientLayer`` is inherited fr
 
   namespace nav2_gradient_costmap_plugin
   {
-  
+
   class GradientLayer : public nav2_costmap_2d::Layer
 
 The basic class provides the set of virtual methods API for working with costmap layers in a plugin. These methods are called at runtime by ``LayeredCostmap``. The list of methods, their description, and necessity to have these methods in plugin's code is presented in the table below:
@@ -75,6 +75,9 @@ The basic class provides the set of virtual methods API for working with costmap
 +----------------------+----------------------------------------------------------------------------+-------------------------+
 | reset()              | It may have any code to be executed during costmap reset.                  | Yes                     |
 +----------------------+----------------------------------------------------------------------------+-------------------------+
+| isClearable()        | Method is called to ask the plugin: should it be processed during          | Yes                     |
+|                      | clearing operations or not.                                                |                         |
++----------------------+----------------------------------------------------------------------------+-------------------------+
 
 In our example these methods have the following functionality:
 
@@ -82,8 +85,7 @@ In our example these methods have the following functionality:
 
 .. code-block:: c
 
-  declareParameter("enabled", rclcpp::ParameterValue(true));
-  node_->get_parameter(name_ + "." + "enabled", enabled_);
+  node->declare_or_get_parameter(name_ + "." + "enabled", true);
 
 and sets ``need_recalculation_`` bounds recalculation indicator:
 
@@ -124,6 +126,8 @@ These parameters are defined in plugin's header file.
 4. ``GradientLayer::onFootprintChanged()`` just resets ``need_recalculation_`` value.
 
 5. ``GradientLayer::reset()`` method is dummy: it is not used in this example plugin. It remains there since pure virtual function ``reset()`` in parent ``Layer`` class required to be overridden.
+
+6. ``GradientLayer::isClearable()`` returns ``false`` since this plugin is not clearable.
 
 2- Export and make GradientLayer plugin
 ---------------------------------------
@@ -174,7 +178,18 @@ Plugin description file is also should be added to ``package.xml``. ``costmap_2d
 
 After everything is done put the plugin package into ``src`` directory of a certain ROS 2-workspace, build the plugin package (``colcon build --packages-select nav2_gradient_costmap_plugin --symlink-install``) and source ``setup.bash`` file when it necessary.
 
-Now the plugin is ready to use.
+Now the plugin is ready to use. You can verify that it has been successfully registered by running:
+
+.. code-block:: shell
+
+  $ ros2 plugin list
+
+You should see an output similar to below:
+
+.. code-block:: shell
+
+  nav2_gradient_costmap_plugin:
+        Plugin(name='nav2_gradient_costmap_plugin::GradientLayer', type='nav2_gradient_costmap_plugin::GradientLayer', base='nav2_costmap_2d::Layer')
 
 3- Enable the plugin in Costmap2D
 ---------------------------------
@@ -203,7 +218,6 @@ For example:
   @@ -171,8 +171,8 @@ global_costmap:
          robot_base_frame: base_link
          global_frame: map
-         use_sim_time: True
   -      plugins: ["static_layer", "obstacle_layer", "voxel_layer", "inflation_layer"]
   +      plugins: ["static_layer", "obstacle_layer", "voxel_layer", "gradient_layer"]
          robot_radius: 0.22
@@ -230,6 +244,9 @@ In this case each plugin object will be handled by its own parameters tree in a 
     plugin: nav2_gradient_costmap_plugin::GradientLayer # In Iron and older versions, "/" was used instead of "::"
     enabled: False
     ...
+.. note::
+
+  The order in which plugins are listed in the configuration is significant, as it determines the sequence in which they are applied to the costmap. For example, if the inflation layer is listed before the range layer, obstacles added to the costmap by the range layer will not be inflated.
 
 4- Run GradientLayer plugin
 ---------------------------

@@ -13,11 +13,11 @@ Input Ports
   ====== =======
   Type   Default
   ------ -------
-  string N/A  
+  string N/A
   ====== =======
 
   Description
-    	Service name.
+      Service name.
 
 
 :server_timeout:
@@ -25,11 +25,11 @@ Input Ports
   ====== =======
   Type   Default
   ------ -------
-  double 10  
+  double 10
   ====== =======
 
   Description
-    	Server timeout (ms).
+      Server timeout (ms).
 
 Example
 -------

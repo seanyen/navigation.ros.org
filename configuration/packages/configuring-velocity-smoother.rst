@@ -5,7 +5,7 @@ Velocity Smoother
 
 Source code on Github_.
 
-.. _Github: https://github.com/ros-planning/navigation2/tree/main/nav2_velocity_smoother
+.. _Github: https://github.com/ros-navigation/navigation2/tree/main/nav2_velocity_smoother
 
 The ``nav2_velocity_smoother`` is a package containing a lifecycle-component node for smoothing velocities sent by Nav2 to robot controllers.
 The aim of this package is to implement velocity, acceleration, and deadband smoothing from Nav2 to reduce wear-and-tear on robot motors and hardware controllers by smoothing out the accelerations/jerky movements that might be present with some local trajectory planners' control efforts.
@@ -21,16 +21,16 @@ Velocity Smoother Parameters
   ============== =======
   Type           Default
   -------------- -------
-  bool           false   
+  bool           false
   ============== =======
 
   Description
-    Adds soft real-time priorization to the controller server to better ensure resources to time sensitive portions of the codebase. This will set the controller's execution thread to a higher priority than the rest of the system (``90``) to meet scheduling deadlines to have less missed loop rates. To use this feature, you use set the following inside of ``/etc/security/limits.conf`` to give userspace access to elevated prioritization permissions: ``<username> soft rtprio 99 <username> hard rtprio 99``
+    Adds soft real-time prioritization to the controller server to better ensure resources to time sensitive portions of the codebase. This will set the controller's execution thread to a higher priority than the rest of the system (``90``) to meet scheduling deadlines to have less missed loop rates. To use this feature, you use set the following inside of ``/etc/security/limits.conf`` to give userspace access to elevated prioritization permissions: ``<username> soft rtprio 99 <username> hard rtprio 99``
 
 :smoothing_frequency:
 
   ============== ===========================
-  Type           Default                    
+  Type           Default
   -------------- ---------------------------
   double         20.0
   ============== ===========================
@@ -41,7 +41,7 @@ Velocity Smoother Parameters
 :scale_velocities:
 
   ============== ===========================
-  Type           Default                    
+  Type           Default
   -------------- ---------------------------
   bool           false
   ============== ===========================
@@ -52,7 +52,7 @@ Velocity Smoother Parameters
 :feedback:
 
   ============== ===========================
-  Type           Default                    
+  Type           Default
   -------------- ---------------------------
   string         "OPEN_LOOP"
   ============== ===========================
@@ -63,40 +63,40 @@ Velocity Smoother Parameters
 :max_velocity:
 
   ============== ===========================
-  Type           Default                    
+  Type           Default
   -------------- ---------------------------
   vector<double> [0.5, 0.0, 2.5]
   ============== ===========================
 
   Description
-    Maximum velocities (m/s) in ``[x, y, theta]`` axes.
+    Maximum velocities (m/s) in ``[x, y, theta]`` axes or ``[x, y, z, roll, pitch, yaw]`` for full 6-DoF support.
 
 :min_velocity:
 
   ============== ===========================
-  Type           Default                    
+  Type           Default
   -------------- ---------------------------
   vector<double> [-0.5, 0.0, -2.5]
   ============== ===========================
 
   Description
-    Minimum velocities (m/s) in ``[x, y, theta]`` axes. This is **signed** and thus must be **negative** to reverse. Note: rotational velocities negative direction is a right-hand turn, so this should always be negative regardless of reversing preference.
+    Minimum velocities (m/s) in ``[x, y, theta]`` axes or ``[x, y, z, roll, pitch, yaw]`` for full 6-DoF support. This is **signed** and thus must be **negative** to reverse. Note: rotational velocities negative direction is a right-hand turn, so this should always be negative regardless of reversing preference.
 
 :deadband_velocity:
 
   ============== ===========================
-  Type           Default                    
+  Type           Default
   -------------- ---------------------------
   vector<double> [0.0, 0.0, 0.0]
   ============== ===========================
 
   Description
-    Minimum velocities (m/s) to send to the robot hardware controllers, to prevent small commands from damaging hardware controllers if that speed cannot be achieved due to stall torque.
+    Minimum velocities (m/s) in ``[x, y, theta]`` axes or ``[x, y, z, roll, pitch, yaw]`` for full 6-DoF support to send to the robot hardware controllers, to prevent small commands from damaging hardware controllers if that speed cannot be achieved due to stall torque.
 
 :velocity_timeout:
 
   ============== ===========================
-  Type           Default                    
+  Type           Default
   -------------- ---------------------------
   double         1.0
   ============== ===========================
@@ -107,29 +107,29 @@ Velocity Smoother Parameters
 :max_accel:
 
   ============== ===========================
-  Type           Default                    
+  Type           Default
   -------------- ---------------------------
   vector<double> [2.5, 0.0, 3.2]
   ============== ===========================
 
   Description
-    Maximum acceleration to apply to each axis ``[x, y, theta]``.
+    Maximum acceleration to apply to each axis ``[x, y, theta]`` or ``[x, y, z, roll, pitch, yaw]`` for full 6-DoF support.
 
 :max_decel:
 
   ============== ===========================
-  Type           Default                    
+  Type           Default
   -------------- ---------------------------
   vector<double> [-2.5, 0.0, -3.2]
   ============== ===========================
 
   Description
-    Minimum acceleration to apply to each axis ``[x, y, theta]``. This is **signed** and thus these should generally all be **negative**.
+    Minimum acceleration to apply to each axis ``[x, y, theta]`` or ``[x, y, z, roll, pitch, yaw]`` for full 6-DoF support. This is **signed** and thus these should generally all be **negative**.
 
 :odom_topic:
 
   ============== ===========================
-  Type           Default                    
+  Type           Default
   -------------- ---------------------------
   string         "odom"
   ============== ===========================
@@ -140,7 +140,7 @@ Velocity Smoother Parameters
 :odom_duration:
 
   ============== ===========================
-  Type           Default                    
+  Type           Default
   -------------- ---------------------------
   double         0.1
   ============== ===========================
@@ -153,24 +153,46 @@ Velocity Smoother Parameters
   ============== =============================
   Type           Default
   -------------- -----------------------------
-  bool           false
+  bool           true
   ============== =============================
 
   Description
     Whether to use geometry_msgs::msg::Twist or geometry_msgs::msg::TwistStamped velocity data.
     True uses TwistStamped, false uses Twist.
+    Note: This parameter is default ``false`` in Jazzy or older! Kilted or newer uses ``TwistStamped`` by default.
+
+:stamp_smoothed_velocity_with_smoothing_time:
+
+  ============== =============================
+  Type           Default
+  -------------- -----------------------------
+  bool           false
+  ============== =============================
+
+  Description
+    Whether to interpolate the timestamps of the smoothed `geometery_msgs:msg::TwistStamped` cmd_vel message after the last command velocity received. Only available in Jazzy as a backport of the now-default behavior in Lyrical and newer. Default is ``false`` for backwards compatibility.
 
 :bond_heartbeat_period:
 
   ============== =============================
   Type           Default
   -------------- -----------------------------
-  double         0.1
+  double         0.25
   ============== =============================
 
   Description
     The lifecycle node bond mechanism publishing period (on the /bond topic). Disabled if inferior or equal to 0.0.
 
+:allow_parameter_qos_overrides:
+
+  ============== =============================
+  Type           Default
+  -------------- -----------------------------
+  bool           true
+  ============== =============================
+
+  Description
+    Whether to allow QoS profiles to be overwritten with parameterized values.
 
 Example
 *******
@@ -191,3 +213,4 @@ Example
       odom_duration: 0.1
       use_realtime_priority: false
       enable_stamped_cmd_vel: false
+      stamp_smoothed_velocity_with_smoothing_time: false  # ONLY IN JAZZY

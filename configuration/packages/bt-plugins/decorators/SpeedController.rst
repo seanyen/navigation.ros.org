@@ -5,7 +5,7 @@ SpeedController
 
 A node that controls the tick rate for its child based on current robot speed.
 The maximum and minimum replanning rates can be supplied to the node as parameters along with maximum and minimum speed.
-The node returns RUNNING when it is not ticking its child. Currently, in the navigation 
+The node returns RUNNING when it is not ticking its child. Currently, in the navigation
 stack, the ``SpeedController`` is used to adjust the rate at which the ``ComputePathToPose`` and ``GoalReached`` nodes are ticked.
 
 Input Ports
@@ -55,17 +55,6 @@ Input Ports
   Description
       The maximum robot speed above which the child node is ticked at maximum rate (m/s).
 
-:filter_duration:
-
-  ====== =======
-  Type   Default
-  ------ -------
-  double  0.3
-  ====== =======
-
-  Description
-      Duration (secs) over which robot velocity should be smoothed.
-
 :goal:
 
   =============================== ========
@@ -75,18 +64,18 @@ Input Ports
   =============================== ========
 
   Description
-    	Destination to check. Takes in a blackboard variable, "{goal}" if not specified.
+      Destination to check. Takes in a blackboard variable, "{goal}" if not specified.
 
 :goals:
 
-  ============================================ =========
-  Type                                         Default
-  -------------------------------------------- ---------
-  std::vector<geometry_msgs::msg::PoseStamped> "{goals}"
-  ============================================ =========
+  ==================== =========
+  Type                 Default
+  -------------------- ---------
+  nav_msgs::msg::Goals "{goals}"
+  ==================== =========
 
   Description
-    	Vector of goals to check. Takes in a blackboard variable, "{goals}" if not specified.
+      Vector of goals to check. Takes in a blackboard variable, "{goals}" if not specified.
 
 Example
 -------

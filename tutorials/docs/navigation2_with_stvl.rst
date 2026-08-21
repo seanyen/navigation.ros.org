@@ -1,6 +1,6 @@
 .. _stvl:
 
-(STVL) Using an External Costmap Plugin
+Using an External Costmap Plugin (STVL)
 ***************************************
 
 - `Overview`_
@@ -42,7 +42,7 @@ Another available pluginlib plugin for Costmap2D in Navigation2 is STVL.
 
 STVL is another 3D perception plugin similar to the Voxel Layer.
 A more detailed overview of how it works can be found `in this repo <https://github.com/SteveMacenski/spatio_temporal_voxel_layer/>`_, however it buffers 3D data from depth cameras, sonars, lidars, and more into a sparse volumetic world model and removes voxels over time proportional with a sensor model and time-based expiration.
-This can be especially useful for robots in highly dynamic envrionments and decreases the resource utilization for 3D sensor processing by up to 2x.
+This can be especially useful for robots in highly dynamic environments and decreases the resource utilization for 3D sensor processing by up to 2x.
 STVL also treats 3D lidars and radars as first class citizens for support.
 The ROSCon talk for STVL can be found `in this video <https://vimeo.com/292699571>`_.
 
@@ -57,13 +57,23 @@ Follow the same process as in :ref:`getting_started` for installing and setting 
 1- Install STVL
 ---------------
 
+First, source your ROS 2 installation to set the environment variables:
+
+.. code-block:: bash
+
+  source /opt/ros/<ros2-distro>/setup.bash
+
 STVL can be installed in ROS 2 via the ROS Build Farm:
 
-- ``sudo apt install ros-<ros2-distro>-spatio-temporal-voxel-layer``
+.. code-block:: bash
+
+  sudo apt install ros-$ROS_DISTRO-spatio-temporal-voxel-layer
 
 It can also be built from source by cloning the repository into your Navigation2 workspace:
 
-- ``git clone -b <ros2-distro>-devel git@github.com:stevemacenski/spatio_temporal_voxel_layer``
+.. code-block:: bash
+
+  git clone -b $ROS_DISTRO-devel git@github.com:stevemacenski/spatio_temporal_voxel_layer
 
 1- Modify Navigation2 Parameter
 -------------------------------
@@ -76,7 +86,6 @@ For example, the following will load the static and obstacle layer plugins into 
     global_costmap:
       global_costmap:
         ros__parameters:
-          use_sim_time: True
           plugins: ["static_layer", "obstacle_layer"]
 
 
@@ -92,7 +101,6 @@ For example, if the application required an STVL layer and no obstacle layer, ou
     global_costmap:
       global_costmap:
         ros__parameters:
-          use_sim_time: True
           plugins: ["static_layer", "stvl_layer"]
 
 Similar to the Voxel Layer, after registering the plugin, we can add the configuration of the STVL layer under the namespace ``stvl_layer``.

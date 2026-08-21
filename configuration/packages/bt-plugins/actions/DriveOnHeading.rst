@@ -6,7 +6,7 @@ DriveOnHeading
 Invokes the DriveOnHeading ROS 2 action server, which causes the robot to drive on the current heading by a specific displacement.
 It performs a linear translation by a given distance. The nav2_behaviors module implements the DriveOnHeading action server.
 
-.. nav2_behaviors_: https://github.com/ros-planning/navigation2/tree/main/nav2_behaviors
+.. nav2_behaviors_: https://github.com/ros-navigation/navigation2/tree/main/nav2_behaviors
 
 Input Ports
 ***********
@@ -20,7 +20,7 @@ Input Ports
   ====== =======
 
   Description
-    	Distance to travel (m).
+        Distance to travel (m).
 
 :speed:
 
@@ -31,7 +31,7 @@ Input Ports
   ====== =======
 
   Description
-    	Speed at which to travel (m/s).
+        Speed at which to travel (m/s).
 
 :time_allowance:
 
@@ -42,7 +42,7 @@ Input Ports
   ====== =======
 
   Description
-      Time to envoke behavior for, if exceeds considers it a stuck condition or failure case (seconds).
+      Time to invoke behavior for, if exceeds considers it a stuck condition or failure case (seconds).
 
 :server_name:
 
@@ -53,7 +53,7 @@ Input Ports
   ====== =======
 
   Description
-    	Action server name.
+        Action server name.
 
 :server_timeout:
 
@@ -64,7 +64,18 @@ Input Ports
   ====== =======
 
   Description
-    	Action server timeout (ms).
+        Action server timeout (ms).
+
+:disable_collision_checks:
+
+  ====== =======
+  Type   Default
+  ------ -------
+  bool   false
+  ====== =======
+
+  Description
+      Disable collision checking.
 
 Output Ports
 ------------
@@ -74,15 +85,27 @@ Output Ports
   ============== =======
   Type           Default
   -------------- -------
-  uint16          N/A  
+  uint16          N/A
   ============== =======
 
   Description
-    	Drive on heading error code. See ``DriveOnHeading`` action message for the enumerated set of error codes.
+        Drive on heading error code. See ``DriveOnHeading`` action message for the enumerated set of error codes.
+
+:error_msg:
+
+  ============== =======
+  Type           Default
+  -------------- -------
+  string         N/A
+  ============== =======
+
+  Description
+        Drive on heading error message. See ``DriveOnHeading`` action message for the enumerated set of error codes.
 
 Example
 -------
 
 .. code-block:: xml
 
-  <DriveOnHeading dist_to_travel="0.2" speed="0.05" server_name="backup_server" server_timeout="10" error_code_id="{drive_on_heading_error_code}"/>
+  <DriveOnHeading dist_to_travel="0.2" speed="0.05" server_name="backup_server" server_timeout="10" disable_collision_checks="false"
+                  error_code_id="{drive_on_heading_error_code}" error_msg="{drive_on_heading_error_msg}"/>

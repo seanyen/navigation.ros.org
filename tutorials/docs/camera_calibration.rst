@@ -16,18 +16,26 @@ This tutorial shows how to obtain calibration parameters for monocular camera.
 Requirements
 ============
 
-1- Install Camera Calibration Parser, Camera Info Manager and Launch Testing Ament Cmake using operating system’s package manager:
+1- First, source your ROS 2 installation to set the environment variables:
 
-        ``sudo apt install ros-<ros2-distro>-camera-calibration-parsers``
+.. code-block:: shell
 
-        ``sudo apt install ros-<ros2-distro>-camera-info-manager``
+  source /opt/ros/<ros2-distro>/setup.bash
 
-        ``sudo apt install ros-<ros2-distro>-launch-testing-ament-cmake``
+2- Install Camera Calibration Parser, Camera Info Manager and Launch Testing Ament Cmake:
+
+.. code-block:: shell
+
+  sudo apt install ros-$ROS_DISTRO-camera-calibration-parsers
+  sudo apt install ros-$ROS_DISTRO-camera-info-manager
+  sudo apt install ros-$ROS_DISTRO-launch-testing-ament-cmake
 
 
-2- Image Pipeline need to be built from source in your workspace with:
+3- Image Pipeline need to be built from source in your workspace with:
 
-        ``git clone – b <ros2-distro> git@github.com:ros-perception/image_pipeline.git``
+.. code-block:: shell
+
+  git clone -b $ROS_DISTRO git@github.com:ros-perception/image_pipeline.git
 
 
 **Also, make sure you have the following:**
@@ -109,7 +117,7 @@ Tutorial Steps
      --disable_calib_cb_fast_check
                         uses the CALIB_CB_FAST_CHECK flag for findChessboardCorners
 
-	This will open a calibration window which highlight the checkerboard.
+  This will open a calibration window which highlight the checkerboard.
 
 |
 
@@ -184,9 +192,3 @@ Tutorial Steps
        ``tar -xvf calibration.tar.gz``
 
 11-In the folder images used for calibration are available and also “**ost.yaml**” and “**ost.txt**”. You can use the yaml file which contains the calibration parameters as directed by the camera driver.
-
-
-
-
-
-  

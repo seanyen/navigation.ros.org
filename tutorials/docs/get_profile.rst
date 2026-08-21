@@ -1,4 +1,4 @@
-.. _get_profile: 
+.. _get_profile:
 
 Profiling in ROS 2 / Nav2
 *************************
@@ -20,13 +20,13 @@ The following steps show ROS 2 users how to modify the Nav2 stack to get profili
 Preliminaries
 =============
 
-This tutorial makes use of two tools, callgrind from the ``Valgrind`` set of tools and ``kcachegrind``. Valgrind is used to get the profiling information about the program and kcachegrind is the visualization engine used to interprete this information to do useful work.
+This tutorial makes use of two tools, callgrind from the ``Valgrind`` set of tools and ``kcachegrind``. Valgrind is used to get the profiling information about the program and kcachegrind is the visualization engine used to interpret this information to do useful work.
 
 Thus, we must install them.
 
 .. code-block:: bash
-	
-	sudo apt install valgrind kcachegrind
+
+  sudo apt install valgrind kcachegrind
 
 More information can be found in the `Valgrind manual <https://valgrind.org/docs/manual/cl-manual.html>`_ including additional valgrind arguments that can be used to specify more information.
 
@@ -34,7 +34,7 @@ Generally speaking, to use valgrind we need to compile with debugging informatio
 
 .. code-block:: cmake
 
-	# CMakeLists.txt
+  # CMakeLists.txt
   add_compile_options(-g)
 
 .. code-block:: bash
@@ -54,9 +54,9 @@ As in our generic example, for a given node, we need to compile with debug flags
 
 .. code-block:: bash
 
-	colcon build --packages-select <packages of interest> --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo
+  colcon build --packages-select <packages of interest> --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo
 
-Optionally, you may add the following line to the ``CMakeLists.txt`` of the package you're looking to profile. This may be preferable when you have a workspace with many packages but would like to only compile a subset with debug information using a single ``colcon build`` invokation. 
+Optionally, you may add the following line to the ``CMakeLists.txt`` of the package you're looking to profile. This may be preferable when you have a workspace with many packages but would like to only compile a subset with debug information using a single ``colcon build`` invocation.
 
 It is important that this should be added to both the host server and plugin packages(s) if you would like the results of a plugin's run-time profile.
 
@@ -87,16 +87,16 @@ As our example before, this is how we'd launch the ``controller_server`` node fr
 
 .. code-block:: python
 
-	start_controller_server_node = Node(
-	    parameters=[
-	      get_package_share_directory("nav2_bringup") + '/params/nav2_params.yaml',
-	      {'use_sim_time': use_sim_time}
-	    ],
-	    package='nav2_controller',
-	    executable='controller_server',
-	    name='controller_server',
-	    prefix=['xterm -e valgrind --tool=callgrind'],
-	    output='screen')
+  start_controller_server_node = Node(
+      parameters=[
+        get_package_share_directory("nav2_bringup") + '/params/nav2_params.yaml',
+        {'use_sim_time': use_sim_time}
+      ],
+      package='nav2_controller',
+      executable='controller_server',
+      name='controller_server',
+      prefix=['xterm -e valgrind --tool=callgrind'],
+      output='screen')
 
 Note that just like before, we should isolate this process from others. So this should not be run with any other nodes in this launch file nor use node composition when profiling a particular node.
 
@@ -123,7 +123,7 @@ Once you have your ``callgrind`` results, regardless of if you did it through a 
 
 .. code-block:: bash
 
-	kcachegrind callgrind.out.XXX
+  kcachegrind callgrind.out.XXX
 
 This should open a window looking like below. The left side shows all of the calls and their relative percentages of compute time they and their children functions utilized.
 
@@ -131,7 +131,7 @@ This should open a window looking like below. The left side shows all of the cal
     :height: 450px
     :width: 600px
     :align: center
- 
+
 If you select the top level entry on the left sidebar, then select "Call Graph" at the bottom of the right workspace, it should show you a call graph of where the compute time was spent as a graph of method calls. This can be exceptionally helpful to find the methods where the most time is spent.
 
  .. image:: images/call_graph.png

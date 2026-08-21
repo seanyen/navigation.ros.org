@@ -19,6 +19,17 @@ However, unlike the Collision Monitor that uses different behavior models, the C
 
 The zones around the robot and the data sources are the same as for the Collision Monitor, with the exception of the footprint polygon, which is not supported by the Collision Detector.
 
+Any data source can optionally define one or more **exclusion zones**.
+An exclusion zone is a region that *removes* (masks out) that source's points which fall inside it, before the detector polygons are evaluated.
+Unlike the polygons above, an exclusion zone does **not** trigger detection, it is a per-source pre-filter.
+A typical use case is ignoring known structure the robot deliberately approaches, such as a charging dock or a conveyor, whose returns would otherwise trip the detection zones.
+Another common use case is self-filtering: masking out returns from parts of the robot itself (e.g. arms, mast, bumpers, or trailers) that fall within a sensor's field of view, which would otherwise be mistaken for obstacles. Anchoring the zone to the relevant robot frame keeps the mask aligned with that structure as it moves.
+A zone can be a polygon or circle anchored to an arbitrary ``frame_id`` (e.g. ``dock_link``), so it tracks that frame as the robot moves, with an optional height band for 3D sources.
+The filter is fail-safe: if the zone transform is unavailable, no points are removed.
+Each zone inherits its owning source's ``base_shift_correction`` policy, so the mask and the source points are always transformed under the same assumptions.
+See YAML at the bottom for an example.
+
+
 Parameters
 **********
 
@@ -75,7 +86,7 @@ Parameters
   ============== =============================
 
   Description:
-    Maximum time interval in which source data is considered as valid. If no new data is received within this interval, an additional warning will be displayed. Setting ``source_timeout: 0.0`` disables it. This parameter can be overriden per observation source.
+    Maximum time interval in which source data is considered as valid. If no new data is received within this interval, an additional warning will be displayed. Setting ``source_timeout: 0.0`` disables it. This parameter can be overridden per observation source.
 
 :base_shift_correction:
 
@@ -136,7 +147,7 @@ Polygons parameters
   ============== =============================
 
   Description:
-    Polygon vertexes, listed in ``"[[p1.x, p1.y], [p2.x, p2.y], [p3.x, p3.y], ...]"`` format (e.g. ``"[[0.5, 0.25], [0.5, -0.25], [0.0, -0.25], [0.0, 0.25]]"`` for the square in the front). Used for ``polygon`` type. Minimum 3 points for a triangle polygon. If not specified, the collision detector will use dynamic polygon subscription to ``polygon_sub_topic``
+    Polygon vertices, listed in ``"[[p1.x, p1.y], [p2.x, p2.y], [p3.x, p3.y], ...]"`` format (e.g. ``"[[0.5, 0.25], [0.5, -0.25], [0.0, -0.25], [0.0, 0.25]]"`` for the square in the front). Used for ``polygon`` type. Minimum 3 points for a triangle polygon. If not specified, the collision detector will use dynamic polygon subscription to ``polygon_sub_topic``
 
 :``<polygon_name>``.polygon_sub_topic:
 
@@ -181,6 +192,31 @@ Polygons parameters
 
   Description:
     Minimum number of data readings within a zone to trigger the action. Former ``max_points`` parameter for Humble, that meant the maximum number of data readings within a zone to not trigger the action). ``min_points`` is equal to ``max_points + 1`` value.
+
+:``<polygon_name>``.trigger_consecutive_points:
+
+  ============== =============================
+  Type           Default
+  -------------- -----------------------------
+  int            1
+  ============== =============================
+
+  Description:
+    Number of consecutive processing cycles with ``points_inside >= min_points`` required to enter the triggered state.
+    A value of ``1`` means trigger in a single processing cycle.
+
+:``<polygon_name>``.release_consecutive_points:
+
+  ============== =============================
+  Type           Default
+  -------------- -----------------------------
+  int            1
+  ============== =============================
+
+  Description:
+    Number of consecutive processing cycles with ``points_inside < min_points`` required to leave the triggered state.
+    A value of ``1`` means release in a single processing cycle.
+    In practice, values greater than ``1`` can reduce sensor noise flicker while remaining responsive.
 
 :``<polygon_name>``.visualize:
 
@@ -229,7 +265,25 @@ Observation sources parameters
   ============== =============================
 
   Description:
-    Type of polygon shape. Could be ``scan``, ``pointcloud`` or ``range``.
+    Type of polygon shape. Could be ``scan``, ``pointcloud``, ``range`` or ``polygon``.
+
+:``<source name>``.transport_type:
+
+  ============== =============================
+  Type           Default
+  -------------- -----------------------------
+  string         "raw"
+  ============== =============================
+
+  Description:
+    For ``pointcloud`` data, specify the transport plugin to use:
+
+  * raw: No compression. Default; highest bandwidth usage.
+  * draco: Lossy compression via Google.
+  * zlib: Lossless compression via Zlib compression.
+  * zstd: Lossless compression via Zstd compression.
+
+  See the `known transports <https://github.com/ros-perception/point_cloud_transport_plugins>`_ for more details.
 
 :``<source name>``.topic:
 
@@ -275,6 +329,17 @@ Observation sources parameters
   Description:
     Angle increment (in radians) between nearby obstacle points at the range arc. Two outermost points from the field of view are not taken into account (they will always exist regardless of this value). Applicable for ``range`` type.
 
+:``<source name>``.sampling_distance:
+
+  ============== =============================
+  Type           Default
+  -------------- -----------------------------
+  double         0.1
+  ============== =============================
+
+  Description:
+    Internally the polygon is sampled for collision detection. sampling_distance is the distance between sampled points of the polygon. Applicable for ``polygon`` source type.
+
 :``<source name>``.enabled:
 
   ============== =============================
@@ -285,7 +350,7 @@ Observation sources parameters
 
   Description:
     Whether to use this source for collision detection. (Can be dynamically set)
-    
+
 :``<source name>``.source_timeout:
 
   ============== =============================
@@ -296,17 +361,146 @@ Observation sources parameters
 
   Description:
     Maximum time interval in which source data is considered as valid. If no new data is received within this interval, an additional warning will be displayed. Setting ``source_timeout: 0.0`` disables it. Overrides node parameter for each source individually, if desired.
-    
+
+:``<source name>``.exclusion_zones:
+
+  ============== =============================
+  Type           Default
+  -------------- -----------------------------
+  vector<string> []
+  ============== =============================
+
+  Description:
+    List of exclusion zone name IDs defined for this source. Each name refers to a
+    zone parameter block (see `Exclusion zones parameters`_). Points from this source
+    that fall inside an enabled zone are removed before the detector polygons are evaluated.
+
+Exclusion zones parameters
+==========================
+
+``<zone name>`` is a parameter block referenced by name from a source's ``exclusion_zones`` list. Zone names are global across the node.
+Exclusion zones remove (mask out) a source's points and never trigger detection. Each zone inherits the owning source's ``base_shift_correction`` policy.
+
+:``<zone name>``.type:
+
+  ============== =============================
+  Type           Default
+  -------------- -----------------------------
+  string         "polygon"
+  ============== =============================
+
+  Description:
+    Type of zone shape. Available values are ``polygon`` and ``circle``.
+
+:``<zone name>``.points:
+
+  ============== =============================
+  Type           Default
+  -------------- -----------------------------
+  string         ""
+  ============== =============================
+
+  Description:
+    Zone polygon vertices, listed in ``"[[p1.x, p1.y], [p2.x, p2.y], [p3.x, p3.y], ...]"`` format, expressed in ``frame_id``. Used for ``polygon`` type. Minimum 3 points. Causes an error, if invalid for a ``polygon`` zone.
+
+:``<zone name>``.radius:
+
+  ============== =============================
+  Type           Default
+  -------------- -----------------------------
+  double         N/A
+  ============== =============================
+
+  Description:
+    Circle radius. Used for ``circle`` type. Must be greater than 0. Causes an error, if not specified for a ``circle`` zone.
+
+:``<zone name>``.frame_id:
+
+  ============== =============================
+  Type           Default
+  -------------- -----------------------------
+  string         (node ``base_frame_id``)
+  ============== =============================
+
+  Description:
+    Frame the zone shape is anchored to and tracked via TF (e.g. ``dock_link``). Leaving it empty, or equal to the base frame, makes a static, robot-relative zone.
+
+:``<zone name>``.frame_hold_timeout:
+
+  ============== =============================
+  Type           Default
+  -------------- -----------------------------
+  double         0.0
+  ============== =============================
+
+  Description:
+    Extra time (in seconds) beyond ``transform_tolerance`` that the last known pose of a stale zone ``frame_id`` keeps being used before the zone fails safe and stops masking points. While held, the zone is frozen at its last valid pose in the ``odom_frame_id`` frame, so it stays world-fixed even if the robot moves. Useful to ride out brief detection dropouts of a marker-based zone frame. ``0.0`` means only the transform tolerance applies.
+
+:``<zone name>``.min_height:
+
+  ============== =============================
+  Type           Default
+  -------------- -----------------------------
+  double         -inf
+  ============== =============================
+
+  Description:
+    Lower bound (in the base frame ``z``) of the height band a point must be within to be masked. Unbounded by default so 2D sources are fully covered.
+
+:``<zone name>``.max_height:
+
+  ============== =============================
+  Type           Default
+  -------------- -----------------------------
+  double         +inf
+  ============== =============================
+
+  Description:
+    Upper bound (in the base frame ``z``) of the height band a point must be within to be masked. Unbounded by default so 2D sources are fully covered.
+
+:``<zone name>``.enabled:
+
+  ============== =============================
+  Type           Default
+  -------------- -----------------------------
+  bool           False
+  ============== =============================
+
+  Description:
+    Whether this zone actively masks points. (Can be dynamically set)
+
+:``<zone name>``.visualize:
+
+  ============== =============================
+  Type           Default
+  -------------- -----------------------------
+  bool           False
+  ============== =============================
+
+  Description:
+    Whether to publish the zone footprint as a ``geometry_msgs/PolygonStamped`` for visualization.
+
 :bond_heartbeat_period:
 
   ============== =============================
   Type           Default
   -------------- -----------------------------
-  double         0.1
+  double         0.25
   ============== =============================
 
   Description
     The lifecycle node bond mechanism publishing period (on the /bond topic). Disabled if inferior or equal to 0.0.
+
+:allow_parameter_qos_overrides:
+
+  ============== =============================
+  Type           Default
+  -------------- -----------------------------
+  bool           true
+  ============== =============================
+
+  Description
+    Whether to allow QoS profiles to be overwritten with parameterized values.
 
 Example
 *******
@@ -330,7 +524,7 @@ Here is an example of configuration YAML for the Collision Detector.
           min_points: 4
           visualize: True
           polygon_pub_topic: "polygon_front"
-        observation_sources: ["scan"]
+        observation_sources: ["scan", "pointcloud"]
         scan:
           source_timeout: 0.2
           type: "scan"
@@ -339,7 +533,18 @@ Here is an example of configuration YAML for the Collision Detector.
         pointcloud:
           type: "pointcloud"
           topic: "/intel_realsense_r200_depth/points"
+          transport_type: "raw"  # raw or/ with compression (zlib, draco, zstd)
           min_height: 0.1
           max_height: 0.5
           enabled: True
-
+          exclusion_zones: ["dock"]   # references the "dock" zone block below
+        # Exclusion zone blocks are referenced by name from a source's "exclusion_zones" list.
+        dock:
+          enabled: True
+          type: "polygon"          # "polygon" or "circle"
+          frame_id: "dock_link"    # frame the zone is anchored to; empty -> robot base frame (static)
+          points: "[[0.5, 0.5], [0.5, -0.5], [-0.5, -0.5], [-0.5, 0.5]]"  # polygon type only
+          # radius: 0.5            # circle type only (must be > 0)
+          min_height: -1.0         # base-frame z band a point must be within to be masked
+          max_height: 1.0
+          visualize: True          # publish the zone footprint as a PolygonStamped

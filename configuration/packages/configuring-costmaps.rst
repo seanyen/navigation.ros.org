@@ -5,10 +5,10 @@ Costmap 2D
 
 Source code on Github_.
 
-.. _Github: https://github.com/ros-planning/navigation2/tree/main/nav2_costmap_2d
+.. _Github: https://github.com/ros-navigation/navigation2/tree/main/nav2_costmap_2d
 
 The Costmap 2D package implements a 2D grid-based costmap for environmental representations and a number of sensor processing plugins (AI outputs, depth sensor obstacle buffering, semantic information, etc).
-It is used in the planner and controller servers for creating the space to check for collisions or higher cost areas to negotiate around. 
+It is used in the planner and controller servers for creating the space to check for collisions or higher cost areas to negotiate around.
 
 Costmap2D ROS Parameters
 ************************
@@ -18,18 +18,40 @@ Costmap2D ROS Parameters
   ============== =======
   Type           Default
   -------------- -------
-  bool           False   
+  bool           False
   ============== =======
 
   Description
-    Whether to send full costmap every update, rather than updates.
+      Whether to send the full costmap on every update instead of only incremental updates.
+
+:introspection_mode:
+
+  ============== =============================
+  Type           Default
+  -------------- -----------------------------
+  string         "disabled"
+  ============== =============================
+
+  Description
+    The introspection mode for services and actions. Options are "disabled", "metadata", "contents".
+
+:allow_parameter_qos_overrides:
+
+  ============== =============================
+  Type           Default
+  -------------- -----------------------------
+  bool           true
+  ============== =============================
+
+  Description
+    Whether to allow QoS profiles to be overwritten with parameterized values.
 
 :footprint_padding:
 
   ============== =======
   Type           Default
   -------------- -------
-  double         0.01   
+  double         0.01
   ============== =======
 
   Description
@@ -40,7 +62,7 @@ Costmap2D ROS Parameters
   ============== =======
   Type           Default
   -------------- -------
-  vector<double> "[]"   
+  vector<double> "[]"
   ============== =======
 
   Description
@@ -51,7 +73,7 @@ Costmap2D ROS Parameters
   ============== =======
   Type           Default
   -------------- -------
-  string         "map"   
+  string         "map"
   ============== =======
 
   Description
@@ -62,7 +84,7 @@ Costmap2D ROS Parameters
   ============== =======
   Type           Default
   -------------- -------
-  int            5   
+  int            5
   ============== =======
 
   Description
@@ -73,7 +95,7 @@ Costmap2D ROS Parameters
   ============== =======
   Type           Default
   -------------- -------
-  int            5   
+  int            5
   ============== =======
 
   Description
@@ -84,51 +106,29 @@ Costmap2D ROS Parameters
   ============== =======
   Type           Default
   -------------- -------
-  int            100    
+  int            100
   ============== =======
 
   Description
     Minimum cost of an occupancy grid map to be considered a lethal obstacle.
-
-:map_topic:
-
-  ============== =======
-  Type           Default
-  -------------- -------
-  string         "map"   
-  ============== =======
-
-  Description
-    Topic of map from map_server or SLAM.
 
 :map_vis_z:
 
   ============== =======
   Type           Default
   -------------- -------
-  double         0.0   
+  double         0.0
   ============== =======
 
   Description
-    The height of map, allows to avoid rviz visualization flickering at -0.008
-
-:observation_sources:
-
-  ============== =======
-  Type           Default
-  -------------- -------
-  string         ""   
-  ============== =======
-
-  Description
-    List of sources of sensors as a string, to be used if not specified in plugin specific configurations. Ex. "static_layer stvl_layer"
+    The height of the map used for visualization, helping to avoid RViz flickering issues (e.g., at -0.008).
 
 :origin_x:
 
   ============== =======
   Type           Default
   -------------- -------
-  double         0.0   
+  double         0.0
   ============== =======
 
   Description
@@ -139,7 +139,7 @@ Costmap2D ROS Parameters
   ============== =======
   Type           Default
   -------------- -------
-  double         0.0   
+  double         0.0
   ============== =======
 
   Description
@@ -150,29 +150,32 @@ Costmap2D ROS Parameters
   ============== =======
   Type           Default
   -------------- -------
-  double         1.0   
+  double         1.0
   ============== =======
 
   Description
-    Frequency to publish costmap to topic.
+    Frequency (Hz) at which the costmap is published to a topic.
+    Higher values provide more frequent updates for visualization and debugging but increase bandwidth usage.
 
 :resolution:
 
   ============== =======
   Type           Default
   -------------- -------
-  double         0.1   
+  double         0.1
   ============== =======
 
   Description
-    Resolution of 1 pixel of the costmap, in meters.
+    Resolution of each cell (pixel) in the costmap, in meters.
+    Smaller values increase map accuracy and obstacle detail but require more computation.
+    Larger values reduce computational load but may miss fine obstacles.
 
 :robot_base_frame:
 
   ============== ===========
-  Type           Default    
+  Type           Default
   -------------- -----------
-  string         "base_link"   
+  string         "base_link"
   ============== ===========
 
   Description
@@ -183,29 +186,42 @@ Costmap2D ROS Parameters
   ============== =======
   Type           Default
   -------------- -------
-  double         0.1   
+  double         0.1
   ============== =======
 
   Description
     Robot radius to use, if footprint coordinates not provided. If this parameter is set, ``isPathValid`` will do circular collision checking.
+
+:subscribe_to_stamped_footprint:
+
+  ============== =======
+  Type           Default
+  -------------- -------
+  bool           False
+  ============== =======
+
+  Description
+    If true, the costmap will subscribe to PolygonStamped footprint messages instead of Polygon messages. This allows the footprint to include timestamp and frame information, which can be useful for applications that need temporally-aware footprint data.
 
 :rolling_window:
 
   ============== =======
   Type           Default
   -------------- -------
-  bool           False   
+  bool           False
   ============== =======
 
   Description
-    Whether costmap should roll with robot base frame.
+    If true, the costmap moves with the robot, maintaining a local view centered around it.
+    This is typically used for local costmaps.
+    If false, the costmap remains fixed in the global frame.
 
 :track_unknown_space:
 
   ============== =======
   Type           Default
   -------------- -------
-  bool           False   
+  bool           False
   ============== =======
 
   Description
@@ -216,7 +232,7 @@ Costmap2D ROS Parameters
   ============== =======
   Type           Default
   -------------- -------
-  double         0.3   
+  double         0.3
   ============== =======
 
   Description
@@ -227,7 +243,7 @@ Costmap2D ROS Parameters
   ============== =======
   Type           Default
   -------------- -------
-  double         60.0   
+  double         60.0
   ============== =======
 
   Description
@@ -238,7 +254,7 @@ Costmap2D ROS Parameters
   ============== =======
   Type           Default
   -------------- -------
-  bool           True   
+  bool           True
   ============== =======
 
   Description
@@ -249,18 +265,29 @@ Costmap2D ROS Parameters
   ============== =======
   Type           Default
   -------------- -------
-  int            255    
+  int            255
   ============== =======
 
   Description
     Cost of unknown space if tracking it.
+
+:inscribed_obstacle_cost_value:
+
+  ============== =======
+  Type           Default
+  -------------- -------
+  int            99
+  ============== =======
+
+  Description
+    The OccupancyGrid values that represents ``INSCRIBED_INFLATED_OBSTACLE`` during costmap conversion operations.
 
 :update_frequency:
 
   ============== =======
   Type           Default
   -------------- -------
-  double         5.0   
+  double         5.0
   ============== =======
 
   Description
@@ -271,11 +298,13 @@ Costmap2D ROS Parameters
   ============== =======
   Type           Default
   -------------- -------
-  bool           False   
+  bool           False
   ============== =======
 
   Description
-    whether when combining costmaps to use the maximum cost or override.
+    Whether to use the maximum cost when combining multiple costmap layers.
+    If true, the highest cost is preserved, ensuring obstacles are not overwritten.
+    If false, newer layers may override previous cost values.
 
 :plugins:
 
@@ -356,10 +385,13 @@ Plugin Parameters
 
   costmap-plugins/static.rst
   costmap-plugins/inflation.rst
+  costmap-plugins/inflation_legacy.rst
+  costmap-plugins/asymmetric_inflation.rst
   costmap-plugins/obstacle.rst
   costmap-plugins/voxel.rst
   costmap-plugins/range.rst
   costmap-plugins/denoise.rst
+  costmap-plugins/plugin_container.rst
 
 Costmap Filters Parameters
 **************************
@@ -370,6 +402,7 @@ Costmap Filters Parameters
   costmap-plugins/keepout_filter.rst
   costmap-plugins/speed_filter.rst
   costmap-plugins/binary_filter.rst
+  costmap-plugins/zone_parameter_filter.rst
 
 Example
 *******
@@ -381,9 +414,9 @@ Example
           footprint_padding: 0.03
           update_frequency: 1.0
           publish_frequency: 1.0
+          transform_tolerance: 0.1
           global_frame: map
           robot_base_frame: base_link
-          use_sim_time: True
           robot_radius: 0.22 # radius set and used, so no footprint points
           resolution: 0.05
           plugins: ["static_layer", "obstacle_layer", "voxel_layer", "inflation_layer"]
@@ -415,7 +448,6 @@ Example
             origin_z: 0.0
             z_resolution: 0.05
             z_voxels: 16
-            max_obstacle_height: 2.0
             unknown_threshold: 15
             mark_threshold: 0
             observation_sources: pointcloud
@@ -431,12 +463,12 @@ Example
               clearing: True
               marking: True
               data_type: "PointCloud2"
+              transport_type: "raw"  # raw or/ with compression (zlib, draco, zstd)
           static_layer:
             plugin: "nav2_costmap_2d::StaticLayer"
             map_subscribe_transient_local: True
             enabled: true
             subscribe_to_updates: true
-            transform_tolerance: 0.1
           inflation_layer:
             plugin: "nav2_costmap_2d::InflationLayer"
             enabled: true
@@ -445,6 +477,7 @@ Example
             inflate_unknown: false
             inflate_around_unknown: true
           always_send_full_costmap: True
+          introspection_mode: "disabled"
 
 
     local_costmap:
@@ -454,8 +487,8 @@ Example
           publish_frequency: 2.0
           global_frame: odom
           robot_base_frame: base_link
-          use_sim_time: True
           rolling_window: true
           width: 3
           height: 3
           resolution: 0.05
+          introspection_mode: "disabled"

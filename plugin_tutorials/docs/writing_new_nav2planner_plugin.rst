@@ -32,7 +32,7 @@ Tutorial Steps
 --------------------------------
 
 We will create a simple straight-line planner.
-The annotated code in this tutorial can be found in `navigation_tutorials <https://github.com/ros-planning/navigation2_tutorials>`_ repository as the ``nav2_straightline_planner``.
+The annotated code in this tutorial can be found in `navigation_tutorials <https://github.com/ros-navigation/navigation2_tutorials>`_ repository as the ``nav2_straightline_planner``.
 This package can be considered as a reference for writing planner plugin.
 
 Our example plugin inherits from the base class ``nav2_core::GlobalPlanner``. The base class provides 5 pure virtual methods to implement a planner plugin. The plugin will be used by the planner server to compute trajectories.
@@ -48,19 +48,21 @@ Let's learn more about the methods needed to write a planner plugin.
 |                      | shared pointer to costmap.                                                  |                         |
 +----------------------+-----------------------------------------------------------------------------+-------------------------+
 | activate()           | Method is called when planner server enters on_activate state. Ideally this | Yes                     |
-|                      | method should implement operations which are neccessary before planner goes |                         |
+|                      | method should implement operations which are necessary before planner goes  |                         |
 |                      | to an active state.                                                         |                         |
 +----------------------+-----------------------------------------------------------------------------+-------------------------+
 | deactivate()         | Method is called when planner server enters on_deactivate state. Ideally    | Yes                     |
-|                      | this method should implement operations which are neccessary before planner |                         |
+|                      | this method should implement operations which are necessary before planner  |                         |
 |                      | goes to an inactive state.                                                  |                         |
 +----------------------+-----------------------------------------------------------------------------+-------------------------+
 | cleanup()            | Method is called when planner server goes to on_cleanup state. Ideally this | Yes                     |
-|                      | method should clean up resoures which are created for the planner.          |                         |
+|                      | method should clean up resources which are created for the planner.         |                         |
 +----------------------+-----------------------------------------------------------------------------+-------------------------+
 | createPlan()         | Method is called when planner server demands a global plan for specified    | Yes                     |
-|                      | start and goal pose. This method returns `nav_msgs\:\:msg\:\:Path` carrying |                         |
-|                      | global plan. This method takes 2 input parmas: start pose and goal pose.    |                         |
+|                      | start pose, goal pose, and intermediate viapoint poses. This method returns |                         |
+|                      | `nav_msgs\:\:msg\:\:Path` carrying global plan. This method takes 4 input   |                         |
+|                      | params: start pose, goal pose, a vector of intermediate poses and a function|                         |
+|                      | to check if the action has been canceled.                                   |                         |
 +----------------------+-----------------------------------------------------------------------------+-------------------------+
 
 For this tutorial, we will be using methods ``StraightLine::configure()`` and ``StraightLine::createPlan()`` to create straight-line planner.
@@ -81,11 +83,15 @@ In planners, ``configure()`` method must set member variables from ROS parameter
 
 Here, ``name_ + ".interpolation_resolution"`` is fetching the ROS parameters ``interpolation_resolution`` which is specific to our planner. Nav2 allows the loading of multiple plugins, and to keep things organized, each plugin is mapped to some ID/name. Now if we want to retrieve the parameters for that specific plugin, we use ``<mapped_name_of_plugin>.<name_of_parameter>`` as done in the above snippet. For example, our example planner is mapped to the name "GridBased" and to retrieve the ``interpolation_resolution`` parameter which is specific to "GridBased", we used ``Gridbased.interpolation_resolution``. In other words, ``GridBased`` is used as a namespace for plugin-specific parameters. We will see more on this when we discuss the parameters file (or params file).
 
-In ``createPlan()`` method, we need to create a path from the given start to goal poses. The ``StraightLine::createPlan()`` is called using start pose and goal pose to solve the global path planning problem. Upon succeeding, it converts the path to the ``nav_msgs::msg::Path`` and returns to the planner server. Below annotation shows the implementation of this method.
+In ``createPlan()`` method, we need to create a path from the given start to goal poses, passing through intermediate viapoints if provided. The ``StraightLine::createPlan()`` is called with a start pose, a goal pose, and a vector of intermediate viapoints to solve the global path planning problem. Upon succeeding, it converts the path to the ``nav_msgs::msg::Path`` and returns to the planner server. Below annotation shows the implementation of this method.
 
 .. code-block:: c++
 
   nav_msgs::msg::Path global_path;
+
+  // copy the viapoints and append the goal since intermediate points would not include the goal
+  std::vector<geometry_msgs::msg::PoseStamped> goals = viapoints;
+  goals.push_back(goal);
 
   // Checking if the goal and start state is in the global frame
   if (start.header.frame_id != global_frame_) {
@@ -105,28 +111,33 @@ In ``createPlan()`` method, we need to create a path from the given start to goa
   global_path.poses.clear();
   global_path.header.stamp = node_->now();
   global_path.header.frame_id = global_frame_;
-  // calculating the number of loops for current value of interpolation_resolution_
-  int total_number_of_loop = std::hypot(
-    goal.pose.position.x - start.pose.position.x,
-    goal.pose.position.y - start.pose.position.y) /
-    interpolation_resolution_;
-  double x_increment = (goal.pose.position.x - start.pose.position.x) / total_number_of_loop;
-  double y_increment = (goal.pose.position.y - start.pose.position.y) / total_number_of_loop;
 
-  for (int i = 0; i < total_number_of_loop; ++i) {
-    geometry_msgs::msg::PoseStamped pose;
-    pose.pose.position.x = start.pose.position.x + x_increment * i;
-    pose.pose.position.y = start.pose.position.y + y_increment * i;
-    pose.pose.position.z = 0.0;
-    pose.pose.orientation.x = 0.0;
-    pose.pose.orientation.y = 0.0;
-    pose.pose.orientation.z = 0.0;
-    pose.pose.orientation.w = 1.0;
-    pose.header.stamp = node_->now();
-    pose.header.frame_id = global_frame_;
-    global_path.poses.push_back(pose);
+  geometry_msgs::msg::PoseStamped start_i = start;
+  for (auto goal_i : goals)
+  {
+    // calculating the number of loops for current value of interpolation_resolution_
+    int total_number_of_loop = std::hypot(
+      goal_i.pose.position.x - start_i.pose.position.x,
+      goal_i.pose.position.y - start_i.pose.position.y) /
+      interpolation_resolution_;
+    double x_increment = (goal_i.pose.position.x - start_i.pose.position.x) / total_number_of_loop;
+    double y_increment = (goal_i.pose.position.y - start_i.pose.position.y) / total_number_of_loop;
+
+    for (int i = 0; i < total_number_of_loop; ++i) {
+      geometry_msgs::msg::PoseStamped pose;
+      pose.pose.position.x = start_i.pose.position.x + x_increment * i;
+      pose.pose.position.y = start_i.pose.position.y + y_increment * i;
+      pose.pose.position.z = 0.0;
+      pose.pose.orientation.x = 0.0;
+      pose.pose.orientation.y = 0.0;
+      pose.pose.orientation.z = 0.0;
+      pose.pose.orientation.w = 1.0;
+      pose.header.stamp = node_->now();
+      pose.header.frame_id = global_frame_;
+      global_path.poses.push_back(pose);
+    }
+    start_i = goal_i;
   }
-
   global_path.poses.push_back(goal);
 
   return global_path;
@@ -143,7 +154,7 @@ Coming back to our tutorial, class ``nav2_straightline_planner::StraightLine`` i
 1. To export the planner, we need to provide two lines
 
 .. code-block:: c++
-  
+
   #include "pluginlib/class_list_macros.hpp"
   PLUGINLIB_EXPORT_CLASS(nav2_straightline_planner::StraightLine, nav2_core::GlobalPlanner)
 
@@ -154,7 +165,7 @@ It is good practice to place these lines at the end of the file, but technically
 2. Next step would be to create plugin's description file in the root directory of the package. For example, ``global_planner_plugin.xml`` file in our tutorial package. This file contains the following information
 
  - ``library path``: Plugin's library name and its location.
- - ``class name``: Name of the class.
+ - ``class name``: Name of the class (optional). If not set, it will default to the ``class type``.
  - ``class type``: Type of class.
  - ``base class``: Name of the base class.
  - ``description``: Description of the plugin.
@@ -182,7 +193,20 @@ It is good practice to place these lines at the end of the file, but technically
     <nav2_core plugin="${prefix}/global_planner_plugin.xml" />
   </export>
 
-5. Compile and it should be registered. Next, we'll use this plugin.
+5. Compile and it should be registered. You can verify that it has been successfully registered by running:
+
+.. code-block:: shell
+
+  $ ros2 plugin list
+
+You should see an output similar to below:
+
+.. code-block:: shell
+
+  nav2_straightline_planner:
+        Plugin(name='nav2_straightline_planner::StraightLine', type='nav2_straightline_planner::StraightLine', base='nav2_core::GlobalPlanner')
+
+Next, we'll use this plugin.
 
 3- Pass the plugin name through params file
 -------------------------------------------
@@ -198,7 +222,6 @@ To enable the plugin, we need to modify the ``nav2_params.yaml`` file as below t
   planner_server:
     ros__parameters:
       plugins: ["GridBased"]
-      use_sim_time: True
       GridBased:
         plugin: "nav2_navfn_planner::NavfnPlanner" # For Foxy and later. In Iron and older versions, "/" was used instead of "::"
         tolerance: 2.0
@@ -212,7 +235,6 @@ with
   planner_server:
     ros__parameters:
       plugins: ["GridBased"]
-      use_sim_time: True
       GridBased:
         plugin: "nav2_straightline_planner::StraightLine"
         interpolation_resolution: 0.1

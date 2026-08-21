@@ -18,9 +18,9 @@ Parameters
   ====== =======
   Type   Default
   ------ -------
-  double 1.0 
+  double 1.0
   ====== =======
-    
+
     Description
         Penalty to apply to backward motion.
 
@@ -29,20 +29,20 @@ Parameters
   ====== =======
   Type   Default
   ------ -------
-  double 0.1 
+  double 0.1
   ====== =======
-    
+
     Description
-        	Minimum X velocity before penalty.
+          Minimum X velocity before penalty.
 
 :``<dwb plugin>``.\ ``<name>``.strafe_theta:
 
   ====== =======
   Type   Default
   ------ -------
-  double 0.2 
+  double 0.2
   ====== =======
-    
+
     Description
         Minimum angular velocity before applying penalty.
 
@@ -51,9 +51,9 @@ Parameters
   ====== =======
   Type   Default
   ------ -------
-  double 10.0 
+  double 10.0
   ====== =======
-    
+
     Description
         Weight for angular velocity component.
 
@@ -62,8 +62,8 @@ Parameters
   ====== =======
   Type   Default
   ------ -------
-  double 1.0 
+  double 1.0
   ====== =======
-    
+
     Description
         Weighed scale for critic.

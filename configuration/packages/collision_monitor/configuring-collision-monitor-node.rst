@@ -47,7 +47,7 @@ The zones around the robot can take the following shapes:
 - Arbitrary user-defined polygon relative to the robot base frame, which can be static in a configuration file or dynamically changing via a topic interface.
 - Robot footprint polygon, which is used in the approach behavior model only. Will use the static user-defined polygon or the footprint topic to allow it to be dynamically adjusted over time.
 - Circle: is made for the best performance and could be used in the cases where the zone or robot footprint could be approximated by round shape.
-- VelocityPolygon: allow switching of polygons based on the command velocity. This is useful for robots to set different safety zones based on their velocity (e.g. a robot that has a larger safety zone when moving at 1.0 m/s than when moving at 0.5 m/s). 
+- VelocityPolygon: allow switching of polygons based on the command velocity. This is useful for robots to set different safety zones based on their velocity (e.g. a robot that has a larger safety zone when moving at 1.0 m/s than when moving at 0.5 m/s).
 
 All shapes (``Polygon``, ``Circle`` and ``VelocityPolygon``) are derived from base ``Polygon`` class, so without loss of generality they would be called as "polygons".
 Subscribed footprint is also having the same properties as other polygons, but it is being obtained a footprint topic for the Approach Model.
@@ -57,9 +57,40 @@ The data may be obtained from different data sources:
 - Laser scanners (``sensor_msgs::msg::LaserScan`` messages)
 - PointClouds (``sensor_msgs::msg::PointCloud2`` messages)
 - IR/Sonars (``sensor_msgs::msg::Range`` messages)
+- Costmap (``nav2_msgs::msg::Costmap`` messages)
+
+.. warning::
+
+   **⚠️ when using CostmapSource**
+   Collision Monitor normally **bypasses the costmap** to minimize reaction latency using fresh sensor data.
+   Use at your own caution or when using external costmap sources from derived sources.
+
+Any data source can optionally define one or more **exclusion zones**.
+An exclusion zone is a region that *removes* (masks out) that source's points which fall inside it, before the action polygons are evaluated.
+Unlike the polygons above, an exclusion zone does **not** trigger a behavior, it is a per-source pre-filter.
+A typical use case is ignoring known structure the robot deliberately approaches, such as a charging dock or a conveyor, whose returns would otherwise trip the stop/slowdown zones.
+Another common use case is self-filtering: masking out returns from parts of the robot itself (e.g. arms, mast, bumpers, or trailers) that fall within a sensor's field of view, which would otherwise be mistaken for obstacles. Anchoring the zone to the relevant robot frame keeps the mask aligned with that structure as it moves.
+A zone can be a polygon or circle anchored to an arbitrary ``frame_id`` (e.g. ``dock_link``), so it tracks that frame as the robot moves, with an optional height band for 3D sources.
+The filter is fail-safe: if the zone transform is unavailable, no points are removed, so collision protection is never silently lost.
+Each zone inherits its owning source's ``base_shift_correction`` policy, so the mask and the source points are always transformed under the same assumptions.
+See YAML at the bottom for an example.
+
 
 Parameters
 **********
+
+:enabled:
+
+  ============== =============================
+  Type           Default
+  -------------- -----------------------------
+  bool           True
+  ============== =============================
+
+  Description:
+    Sets the initial state. This can come in handy when the robot is docked/inside any of the zones at startup and the node needs to be disabled then.
+    Please note that is not a dynamic parameter, there's ``/toggle`` service interface
+    and `BT Node <https://docs.nav2.org/configuration/packages/bt-plugins/actions/ToggleCollisionMonitor.html>`_ to update this state later at runtime.
 
 :base_frame_id:
 
@@ -137,7 +168,7 @@ Parameters
   ============== =============================
 
   Description:
-    Maximum time interval in which source data is considered as valid. If no new data is received within this interval, the robot will be stopped. Setting ``source_timeout: 0.0`` disables this blocking mechanism. This parameter can be overriden per observation source.
+    Maximum time interval in which source data is considered as valid. If no new data is received within this interval, the robot will be stopped. Setting ``source_timeout: 0.0`` disables this blocking mechanism. This parameter can be overridden per observation source.
 
 :base_shift_correction:
 
@@ -189,23 +220,24 @@ Parameters
   ============== =======
   Type           Default
   -------------- -------
-  bool           false   
+  bool           false
   ============== =======
 
   Description
-    Adds soft real-time priorization to the controller server to better ensure resources to time sensitive portions of the codebase. This will set the controller's execution thread to a higher priority than the rest of the system (``90``) to meet scheduling deadlines to have less missed loop rates. To use this feature, you use set the following inside of ``/etc/security/limits.conf`` to give userspace access to elevated prioritization permissions: ``<username> soft rtprio 99 <username> hard rtprio 99``
+    Adds soft real-time prioritization to the controller server to better ensure resources to time sensitive portions of the codebase. This will set the controller's execution thread to a higher priority than the rest of the system (``90``) to meet scheduling deadlines to have less missed loop rates. To use this feature, you use set the following inside of ``/etc/security/limits.conf`` to give userspace access to elevated prioritization permissions: ``<username> soft rtprio 99 <username> hard rtprio 99``
 
 :enable_stamped_cmd_vel:
 
   ============== =============================
   Type           Default
   -------------- -----------------------------
-  bool           false
+  bool           true
   ============== =============================
 
   Description
     Whether to use geometry_msgs::msg::Twist or geometry_msgs::msg::TwistStamped velocity data.
     True uses TwistStamped, false uses Twist.
+    Note: This parameter is default ``false`` in Jazzy or older! Kilted or newer uses ``TwistStamped`` by default.
 
 Polygons parameters
 ===================
@@ -232,7 +264,7 @@ Polygons parameters
   ============== =============================
 
   Description:
-    Polygon vertexes, listed in ``"[[p1.x, p1.y], [p2.x, p2.y], [p3.x, p3.y], ...]"`` format (e.g. ``"[[0.5, 0.25], [0.5, -0.25], [0.0, -0.25], [0.0, 0.25]]"`` for the square in the front). Used for ``polygon`` type. Minimum 3 points for a triangle polygon. If not specified, the collision monitor will use dynamic polygon subscription to ``polygon_sub_topic`` for points in the ``stop``/``slowdown``/``limit`` action types, or footprint subscriber to ``footprint_topic`` for ``approach`` action type.
+    Polygon vertices, listed in ``"[[p1.x, p1.y], [p2.x, p2.y], [p3.x, p3.y], ...]"`` format (e.g. ``"[[0.5, 0.25], [0.5, -0.25], [0.0, -0.25], [0.0, 0.25]]"`` for the square in the front). Used for ``polygon`` type. Minimum 3 points for a triangle polygon. If not specified, the collision monitor will use dynamic polygon subscription to ``polygon_sub_topic`` for points in the ``stop``/``slowdown``/``limit`` action types, or footprint subscriber to ``footprint_topic`` for ``approach`` action type.
 
 :``<polygon_name>``.polygon_sub_topic:
 
@@ -299,6 +331,31 @@ Polygons parameters
 
   Description:
     Minimum number of data readings within a zone to trigger the action. Former ``max_points`` parameter for Humble, that meant the maximum number of data readings within a zone to not trigger the action). ``min_points`` is equal to ``max_points + 1`` value.
+
+:``<polygon_name>``.trigger_consecutive_points:
+
+  ============== =============================
+  Type           Default
+  -------------- -----------------------------
+  int            1
+  ============== =============================
+
+  Description:
+    Number of consecutive processing cycles with ``points_inside >= min_points`` required to enter the triggered state.
+    A value of ``1`` means trigger in a single processing cycle.
+
+:``<polygon_name>``.release_consecutive_points:
+
+  ============== =============================
+  Type           Default
+  -------------- -----------------------------
+  int            1
+  ============== =============================
+
+  Description:
+    Number of consecutive processing cycles with ``points_inside < min_points`` required to leave the triggered state.
+    A value of ``1`` means release in a single processing cycle.
+    In practice, values greater than ``1`` can reduce sensor noise flicker while remaining responsive.
 
 :``<polygon_name>``.slowdown_ratio:
 
@@ -424,7 +481,7 @@ All previous Polygon parameters apply, in addition to the following unique param
   ============== =============================
 
   Description:
-    Polygon vertexes, listed in ``"[[p1.x, p1.y], [p2.x, p2.y], [p3.x, p3.y], ...]"`` format (e.g. ``"[[0.5, 0.25], [0.5, -0.25], [0.0, -0.25], [0.0, 0.25]]"`` for the square in the front). Used for ``polygon`` type. Minimum 3 points for a triangle polygon. Causes an error, if not specified.
+    Polygon vertices, listed in ``"[[p1.x, p1.y], [p2.x, p2.y], [p3.x, p3.y], ...]"`` format (e.g. ``"[[0.5, 0.25], [0.5, -0.25], [0.0, -0.25], [0.0, 0.25]]"`` for the square in the front). Used for ``polygon`` type. Minimum 3 points for a triangle polygon. Causes an error, if not specified.
 
 :``<vel_poly>.<subpoly>``.linear_min:
 
@@ -435,7 +492,10 @@ All previous Polygon parameters apply, in addition to the following unique param
     ============== =============================
 
     Description:
-      Minimum linear velocity for the sub polygon. In holonomic mode, this is the minimum resultant velocity. Causes an error, if not specified.
+      Minimum linear velocity for the sub-polygon. Causes an error, if not specified.
+
+      * **Non-holonomic:** This is the minimum signed velocity along the x-axis (allows negative values for reverse motion).
+      * **Holonomic:** This is the minimum magnitude of the resultant velocity, which must be ``>= 0.0``.
 
 :``<vel_poly>.<subpoly>``.linear_max:
 
@@ -446,10 +506,13 @@ All previous Polygon parameters apply, in addition to the following unique param
     ============== =============================
 
     Description:
-      Maximum linear velocity for the sub polygon. In holonomic mode, this is the maximum resultant velocity. Causes an error, if not specified.
+      Maximum linear velocity for the sub polygon. Causes an error, if not specified.
+
+      * **Non-holonomic:** This is the maximum signed velocity along the x-axis. (allows negative values for reverse motion).
+      * **Holonomic:** This is the maximum magnitude of the resultant velocity, which must be ``>= 0.0``.
 
 :``<vel_poly>.<subpoly>``.theta_min:
-  
+
     ============== =============================
     Type           Default
     -------------- -----------------------------
@@ -466,7 +529,7 @@ All previous Polygon parameters apply, in addition to the following unique param
     -------------- -----------------------------
     double         N/A
     ============== =============================
-  
+
     Description:
       Maximum angular velocity for the sub polygon. Causes an error, if not specified.
 
@@ -479,7 +542,7 @@ All previous Polygon parameters apply, in addition to the following unique param
     ============== =============================
 
     Description:
-      Start angle of the movement direction(for holomic robot only). Refer to the `Example`_ section for the common configurations. Applicable for `holonomic` mode only.
+      Start angle of the movement direction(for holonomic robot only). Refer to the `Example`_ section for the common configurations. Applicable for `holonomic` mode only.
 
 :``<vel_poly>.<subpoly>``.direction_end_angle:
 
@@ -490,7 +553,7 @@ All previous Polygon parameters apply, in addition to the following unique param
     ============== =============================
 
     Description:
-      End angle of the movement direction(for holomic robot only). Refer to the `Example`_ section for the common configurations. Applicable for `holonomic` mode only.
+      End angle of the movement direction(for holonomic robot only). Refer to the `Example`_ section for the common configurations. Applicable for `holonomic` mode only.
 
 Observation sources parameters
 ==============================
@@ -506,7 +569,25 @@ Observation sources parameters
   ============== =============================
 
   Description:
-    Type of polygon shape. Could be ``scan``, ``pointcloud`` or ``range``.
+    Type of polygon shape. Could be ``scan``, ``pointcloud``, ``range``, ``polygon`` or ``costmap``.
+
+:``<source name>``.transport_type:
+
+  ============== =============================
+  Type           Default
+  -------------- -----------------------------
+  string         "raw"
+  ============== =============================
+
+  Description:
+    For ``pointcloud`` data, specify the transport plugin to use:
+
+  * raw: No compression. Default; highest bandwidth usage.
+  * draco: Lossy compression via Google.
+  * zlib: Lossless compression via Zlib compression.
+  * zstd: Lossless compression via Zstd compression.
+
+  See the `known transports <https://github.com/ros-perception/point_cloud_transport_plugins>`_ for more details.
 
 :``<source name>``.topic:
 
@@ -541,6 +622,28 @@ Observation sources parameters
   Description:
     Maximum height the PointCloud projection to 2D space ended with. Applicable for ``pointcloud`` type.
 
+:``<source name>``.use_global_height:
+
+  ============== =============================
+  Type           Default
+  -------------- -----------------------------
+  bool           false
+  ============== =============================
+
+  Description:
+    Set true for pointcloud sources containing a "height" field relative to a real world ground contour. The "height" field will be used for the min and max height checks instead of the "z" field and will not be transformed as it is assumed that height is already global frame referenced. Applicable for ``pointcloud`` type.
+
+:``<source name>``.min_range:
+
+  ============== =============================
+  Type           Default
+  -------------- -----------------------------
+  double         0.0
+  ============== =============================
+
+  Description:
+    Minimum range threshold for PointCloud points. Points closer than this distance (measured as Euclidean distance from sensor origin) will be filtered out before processing. Useful for eliminating noise and invalid readings very close to the sensor. Applicable for ``pointcloud`` type.
+
 :``<source name>``.obstacles_angle:
 
   ============== =============================
@@ -552,6 +655,17 @@ Observation sources parameters
   Description:
     Angle increment (in radians) between nearby obstacle points at the range arc. Two outermost points from the field of view are not taken into account (they will always exist regardless of this value). Applicable for ``range`` type.
 
+:``<source name>``.sampling_distance:
+
+  ============== =============================
+  Type           Default
+  -------------- -----------------------------
+  double         0.1
+  ============== =============================
+
+  Description:
+    Internally the polygon is sampled for collision detection. sampling_distance is the distance between sampled points of the polygon. Applicable for ``polygon`` source type.
+
 :``<source name>``.enabled:
 
   ============== =============================
@@ -562,7 +676,7 @@ Observation sources parameters
 
   Description:
     Whether to use this source for collision monitoring. (Can be dynamically set)
-    
+
 :``<source name>``.source_timeout:
 
   ============== =============================
@@ -574,16 +688,171 @@ Observation sources parameters
   Description:
     Maximum time interval in which source data is considered as valid. If no new data is received within this interval, the robot will be stopped. Setting ``source_timeout: 0.0`` disables this blocking mechanism. Overrides node parameter for each source individually, if desired.
 
+:``<source name>``.cost_threshold:
+
+  ============== =============================
+  Type           Default
+  -------------- -----------------------------
+  int            253
+  ============== =============================
+
+  Description:
+    For ``costmap`` sources only. Minimum cell cost (0–255) to be treated as an
+    obstacle. By default this matches inscribed/lethal cells (253–254) and ignores
+    lower-cost cells.
+
+:``<source name>``.treat_unknown_as_obstacle:
+
+  ============== =============================
+  Type           Default
+  -------------- -----------------------------
+  bool           true
+  ============== =============================
+
+  Description:
+    For ``costmap`` sources only. If ``true``, cells with cost ``255`` (``NO_INFORMATION``)
+    will also be turned into obstacle points. Set to ``false`` if your costmap has
+    large unknown areas you don’t want to trigger Collision Monitor.
+
+:``<source name>``.exclusion_zones:
+
+  ============== =============================
+  Type           Default
+  -------------- -----------------------------
+  vector<string> []
+  ============== =============================
+
+  Description:
+    List of exclusion zone name IDs defined for this source. Each name refers to a
+    zone parameter block (see `Exclusion zones parameters`_). Points from this source
+    that fall inside an enabled zone are removed before the action polygons are evaluated.
+
+Exclusion zones parameters
+==========================
+
+``<zone name>`` is a parameter block referenced by name from a source's ``exclusion_zones`` list. Zone names are global across the node.
+Exclusion zones remove (mask out) a source's points and never trigger an action. Each zone inherits the owning source's ``base_shift_correction`` policy.
+
+:``<zone name>``.type:
+
+  ============== =============================
+  Type           Default
+  -------------- -----------------------------
+  string         "polygon"
+  ============== =============================
+
+  Description:
+    Type of zone shape. Available values are ``polygon`` and ``circle``.
+
+:``<zone name>``.points:
+
+  ============== =============================
+  Type           Default
+  -------------- -----------------------------
+  string         ""
+  ============== =============================
+
+  Description:
+    Zone polygon vertices, listed in ``"[[p1.x, p1.y], [p2.x, p2.y], [p3.x, p3.y], ...]"`` format, expressed in ``frame_id``. Used for ``polygon`` type. Minimum 3 points. Causes an error, if invalid for a ``polygon`` zone.
+
+:``<zone name>``.radius:
+
+  ============== =============================
+  Type           Default
+  -------------- -----------------------------
+  double         N/A
+  ============== =============================
+
+  Description:
+    Circle radius. Used for ``circle`` type. Must be greater than 0. Causes an error, if not specified for a ``circle`` zone.
+
+:``<zone name>``.frame_id:
+
+  ============== =============================
+  Type           Default
+  -------------- -----------------------------
+  string         (node ``base_frame_id``)
+  ============== =============================
+
+  Description:
+    Frame the zone shape is anchored to and tracked via TF (e.g. ``dock_link``). Leaving it empty, or equal to the base frame, makes a static, robot-relative zone.
+
+:``<zone name>``.frame_hold_timeout:
+
+  ============== =============================
+  Type           Default
+  -------------- -----------------------------
+  double         0.0
+  ============== =============================
+
+  Description:
+    Extra time (in seconds) beyond ``transform_tolerance`` that the last known pose of a stale zone ``frame_id`` keeps being used before the zone fails safe and stops masking points. While held, the zone is frozen at its last valid pose in the ``odom_frame_id`` frame, so it stays world-fixed even if the robot moves. Useful to ride out brief detection dropouts of a marker-based zone frame. ``0.0`` means only the transform tolerance applies.
+
+:``<zone name>``.min_height:
+
+  ============== =============================
+  Type           Default
+  -------------- -----------------------------
+  double         -inf
+  ============== =============================
+
+  Description:
+    Lower bound (in the base frame ``z``) of the height band a point must be within to be masked. Unbounded by default so 2D sources are fully covered.
+
+:``<zone name>``.max_height:
+
+  ============== =============================
+  Type           Default
+  -------------- -----------------------------
+  double         +inf
+  ============== =============================
+
+  Description:
+    Upper bound (in the base frame ``z``) of the height band a point must be within to be masked. Unbounded by default so 2D sources are fully covered.
+
+:``<zone name>``.enabled:
+
+  ============== =============================
+  Type           Default
+  -------------- -----------------------------
+  bool           False
+  ============== =============================
+
+  Description:
+    Whether this zone actively masks points. (Can be dynamically set)
+
+:``<zone name>``.visualize:
+
+  ============== =============================
+  Type           Default
+  -------------- -----------------------------
+  bool           False
+  ============== =============================
+
+  Description:
+    Whether to publish the zone footprint as a ``geometry_msgs/PolygonStamped`` for visualization.
+
 :bond_heartbeat_period:
 
   ============== =============================
   Type           Default
   -------------- -----------------------------
-  double         0.1
+  double         0.25
   ============== =============================
 
   Description
     The lifecycle node bond mechanism publishing period (on the /bond topic). Disabled if inferior or equal to 0.0.
+
+:allow_parameter_qos_overrides:
+
+  ============== =============================
+  Type           Default
+  -------------- -----------------------------
+  bool           true
+  ============== =============================
+
+  Description
+    Whether to allow QoS profiles to be overwritten with parameterized values.
 
 Example
 *******
@@ -599,6 +868,7 @@ Here is an example of configuration YAML for the Collision Monitor.
 
     collision_monitor:
       ros__parameters:
+        enabled: True
         base_frame_id: "base_footprint"
         odom_frame_id: "odom"
         cmd_vel_in_topic: "cmd_vel_smoothed"
@@ -608,7 +878,7 @@ Here is an example of configuration YAML for the Collision Monitor.
         source_timeout: 5.0
         base_shift_correction: True
         stop_pub_timeout: 2.0
-        enable_stamped_cmd_vel: False
+        enable_stamped_cmd_vel: True  # False for Jazzy or older
         use_realtime_priority: false
         polygons: ["PolygonStop", "PolygonSlow", "FootprintApproach"]
         PolygonStop:
@@ -676,7 +946,7 @@ Here is an example of configuration YAML for the Collision Monitor.
             theta_max: 1.0
           # This is the last polygon to be checked, it should cover the entire range of robot's velocities
           # It is used as the stopped polygon when the robot is not moving and as a fallback if the velocity
-          # is not covered by any of the other sub-polygons 
+          # is not covered by any of the other sub-polygons
           stopped:
             points: "[[0.25, 0.25], [0.25, -0.25], [-0.25, -0.25], [-0.25, 0.25]]"
             linear_min: -1.0
@@ -692,6 +962,25 @@ Here is an example of configuration YAML for the Collision Monitor.
         pointcloud:
           type: "pointcloud"
           topic: "/intel_realsense_r200_depth/points"
+          transport_type: "raw"  # raw or/ with compression (zlib, draco, zstd)
           min_height: 0.1
           max_height: 0.5
+          min_range: 0.2
           enabled: True
+          exclusion_zones: ["dock"]   # references the "dock" zone block below
+        # Exclusion zone blocks are referenced by name from a source's "exclusion_zones" list.
+        dock:
+          enabled: True
+          type: "polygon"          # "polygon" or "circle"
+          frame_id: "dock_link"    # frame the zone is anchored to; empty -> robot base frame (static)
+          points: "[[0.5, 0.5], [0.5, -0.5], [-0.5, -0.5], [-0.5, 0.5]]"  # polygon type only
+          # radius: 0.5            # circle type only (must be > 0)
+          min_height: -1.0         # base-frame z band a point must be within to be masked
+          max_height: 1.0
+          visualize: True          # publish the zone footprint as a PolygonStamped
+        # costmap:
+        #   type: "costmap"   # relative, respects namespaces
+        #   topic: "local_costmap/costmap"
+        #   cost_threshold: 254
+        #   enabled: True
+        #   treat_unknown_as_obstacle: True

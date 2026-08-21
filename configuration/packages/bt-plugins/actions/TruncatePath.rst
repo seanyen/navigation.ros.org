@@ -28,10 +28,10 @@ Input Ports
   ====== ===========
 
   Description
-    	The distance to the original goal for truncating the path.
+      The distance to the original goal for truncating the path.
 
-Ouput Ports
------------
+Output Ports
+------------
 
 :output_path:
 
@@ -42,7 +42,7 @@ Ouput Ports
   ============= =======
 
   Description
-    	The resulting truncated path.
+      The resulting truncated path.
 
 Example
 -------

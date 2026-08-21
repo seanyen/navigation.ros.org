@@ -17,7 +17,7 @@ Input Ports
   ============= =======
 
   Description
-    	Path to extract pose from
+      Path to extract pose from
 
 :index:
 
@@ -28,7 +28,7 @@ Input Ports
   ====== =======
 
   Description
-    	Index from path to use. Use ``-1`` to get the last pose, ``-2`` for second to last, and so on.
+      Index from path to use. Use ``-1`` to get the last pose, ``-2`` for second to last, and so on.
 
 Output Ports
 ------------
@@ -38,11 +38,11 @@ Output Ports
   ========================= =======
   Type                      Default
   ------------------------- -------
-  geometry_msgs/PoseStamped N/A  
+  geometry_msgs/PoseStamped N/A
   ========================= =======
 
   Description
-    	Pose from path, with the Path's set header.
+      Pose from path, with the Path's set header.
 
 Example
 -------

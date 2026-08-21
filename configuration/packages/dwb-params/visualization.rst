@@ -13,40 +13,18 @@ Parameters
   ==== =======
   Type Default
   ---- -------
-  bool true      
+  bool true
   ==== =======
 
   Description
     Whether to publish the local plan evaluation.
-
-:``<dwb plugin>``.publish_global_plan:
-
-  ==== =======
-  Type Default
-  ---- -------
-  bool true      
-  ==== =======
-
-  Description
-    	Whether to publish the global plan.
-
-:``<dwb plugin>``.publish_transformed_plan:
-
-  ==== =======
-  Type Default
-  ---- -------
-  bool true      
-  ==== =======
-
-  Description
-    Whether to publish the global plan in the odometry frame.
 
 :``<dwb plugin>``.publish_local_plan:
 
   ==== =======
   Type Default
   ---- -------
-  bool true      
+  bool true
   ==== =======
 
   Description
@@ -57,18 +35,18 @@ Parameters
   ==== =======
   Type Default
   ---- -------
-  bool true      
+  bool true
   ==== =======
 
   Description
-    	Whether to publish debug trajectories.
+      Whether to publish debug trajectories.
 
 :``<dwb plugin>``.publish_cost_grid_pc:
 
   ==== =======
   Type Default
   ---- -------
-  bool false      
+  bool false
   ==== =======
 
   Description
@@ -79,7 +57,7 @@ Parameters
   ============== =======
   Type           Default
   -------------- -------
-  double         0.1    
+  double         0.1
   ============== =======
 
   Description

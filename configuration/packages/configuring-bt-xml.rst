@@ -5,13 +5,13 @@ Behavior Tree XML Nodes
 
 The nav2_behavior_tree_ package provides several navigation-specific nodes that are pre-registered and can be included in Behavior Trees.
 
-.. _nav2_behavior_tree: https://github.com/ros-planning/navigation2/tree/main/nav2_behavior_tree
+.. _nav2_behavior_tree: https://github.com/ros-navigation/navigation2/tree/main/nav2_behavior_tree
 
 Check this introduction_ to learn how behavior trees work and the difference between actions, conditions, controls and decorators.
 
-.. _introduction: https://www.behaviortree.dev/bt_basics/
+.. _introduction: https://www.behaviortree.dev/docs/learn-the-basics/BT_basics
 
-Consider checking out the :ref:`groot_introduction` tutorial for using Groot to visualize and modify behavior trees.
+Consider checking out the :ref:`using_groot` tutorial for using Groot to visualize and modify behavior trees.
 
 Action Plugins
 **************
@@ -25,11 +25,14 @@ Action Plugins
   bt-plugins/actions/DriveOnHeading.rst
   bt-plugins/actions/AssistedTeleop.rst
   bt-plugins/actions/ComputePathToPose.rst
+  bt-plugins/actions/ComputeRoute.rst
+  bt-plugins/actions/ComputeAndTrackRoute.rst
   bt-plugins/actions/FollowPath.rst
   bt-plugins/actions/NavigateToPose.rst
   bt-plugins/actions/ClearEntireCostmap.rst
   bt-plugins/actions/ClearCostmapExceptRegion.rst
   bt-plugins/actions/ClearCostmapAroundRobot.rst
+  bt-plugins/actions/ClearCostmapAroundPose.rst
   bt-plugins/actions/ReinitializeGlobalLocalization.rst
   bt-plugins/actions/TruncatePath.rst
   bt-plugins/actions/TruncatePathLocal.rst
@@ -38,6 +41,7 @@ Action Plugins
   bt-plugins/actions/SmootherSelector.rst
   bt-plugins/actions/GoalCheckerSelector.rst
   bt-plugins/actions/ProgressCheckerSelector.rst
+  bt-plugins/actions/PathHandlerSelector.rst
   bt-plugins/actions/NavigateThroughPoses.rst
   bt-plugins/actions/ComputePathThroughPoses.rst
   bt-plugins/actions/ComputeCoveragePath.rst
@@ -50,10 +54,22 @@ Action Plugins
   bt-plugins/actions/CancelWait.rst
   bt-plugins/actions/CancelDriveOnHeading.rst
   bt-plugins/actions/CancelAssistedTeleop.rst
+  bt-plugins/actions/CancelComputeAndTrackRoute.rst
   bt-plugins/actions/Smooth.rst
   bt-plugins/actions/GetPoseFromPath.rst
   bt-plugins/actions/DockRobot.rst
   bt-plugins/actions/UndockRobot.rst
+  bt-plugins/actions/ConcatenatePaths.rst
+  bt-plugins/actions/GetCurrentPose.rst
+  bt-plugins/actions/AppendGoalPoseToGoals.rst
+  bt-plugins/actions/ExtractRouteNodesAsGoals.rst
+  bt-plugins/actions/GetNextFewGoals.rst
+  bt-plugins/actions/ToggleCollisionMonitor.rst
+  bt-plugins/actions/FollowObject.rst
+  bt-plugins/actions/CancelFollowObject.rst
+  bt-plugins/actions/ValidatePath.rst
+  bt-plugins/actions/CheckPoseOccupancy.rst
+  bt-plugins/actions/CheckStopStatus.rst
 
 Condition Plugins
 *****************
@@ -65,18 +81,21 @@ Condition Plugins
   bt-plugins/conditions/TransformAvailable.rst
   bt-plugins/conditions/DistanceTraveled.rst
   bt-plugins/conditions/GoalUpdated.rst
-  bt-plugins/conditions/GloballyUpdatedGoal.rst
+  bt-plugins/conditions/GlobalUpdatedGoal.rst
   bt-plugins/conditions/InitialPoseReceived.rst
+  bt-plugins/conditions/IsGoalNearby.rst
   bt-plugins/conditions/IsStuck.rst
   bt-plugins/conditions/TimeExpired.rst
   bt-plugins/conditions/IsBatteryLow.rst
-  bt-plugins/conditions/IsPathValid.rst
+  bt-plugins/conditions/IsWithinPathTrackingBounds.rst
   bt-plugins/conditions/PathExpiringTimer.rst
   bt-plugins/conditions/AreErrorCodesPresent.rst
   bt-plugins/conditions/WouldAControllerRecoveryHelp.rst
   bt-plugins/conditions/WouldAPlannerRecoveryHelp.rst
   bt-plugins/conditions/WouldASmootherRecoveryHelp.rst
+  bt-plugins/conditions/WouldARouteRecoveryHelp.rst
   bt-plugins/conditions/IsBatteryCharging.rst
+  bt-plugins/conditions/ArePosesNear.rst
 
 Control Plugins
 ***************
@@ -87,6 +106,9 @@ Control Plugins
   bt-plugins/controls/PipelineSequence.rst
   bt-plugins/controls/RoundRobin.rst
   bt-plugins/controls/RecoveryNode.rst
+  bt-plugins/controls/NonblockingSequence.rst
+  bt-plugins/controls/PersistentSequence.rst
+  bt-plugins/controls/PauseResumeController.rst
 
 Decorator Plugins
 *****************
@@ -100,6 +122,7 @@ Decorator Plugins
   bt-plugins/decorators/GoalUpdater.rst
   bt-plugins/decorators/PathLongerOnApproach.rst
   bt-plugins/decorators/SingleTrigger.rst
+  bt-plugins/decorators/GoalUpdatedController.rst
 
 Example
 *******

@@ -16,17 +16,6 @@ Note: All ``default_`` prefixed parameters can be overwritten in the action requ
 Parameters
 **********
 
-:action_server_result_timeout:
-
-  ============== ==============
-  Type           Default                                               
-  -------------- --------------
-  double         10.0            
-  ============== ==============
-
-  Description
-    The timeout for rclcpp to keep action results active before caching them as complete. Set as higher than ROS 2 default since this is a longer-running task server.
-
 :coordinates_in_cartesian_frame:
 
   ============== ========
@@ -96,7 +85,7 @@ Parameters
 :default_headland_type:
 
   ============== ==========
-  Type           Default   
+  Type           Default
   -------------- ----------
   string         "CONSTANT"
   ============== ==========
@@ -107,7 +96,7 @@ Parameters
 :default_headland_width:
 
   ============== ==========
-  Type           Default   
+  Type           Default
   -------------- ----------
   double         2.0
   ============== ==========
@@ -118,7 +107,7 @@ Parameters
 :default_swath_type:
 
   ============== ===============
-  Type           Default   
+  Type           Default
   -------------- ---------------
   string          "LENGTH"
   ============== ===============
@@ -130,7 +119,7 @@ Parameters
 :default_swath_angle_type:
 
   ============== ===============
-  Type           Default   
+  Type           Default
   -------------- ---------------
   double         1.7e-2
   ============== ===============
@@ -141,7 +130,7 @@ Parameters
 :default_step_angle:
 
   ============== ===============
-  Type           Default   
+  Type           Default
   -------------- ---------------
   double         1.7e-2
   ============== ===============
@@ -152,7 +141,7 @@ Parameters
 :default_swath_angle:
 
   ============== ===============
-  Type           Default   
+  Type           Default
   -------------- ---------------
   double         N/A
   ============== ===============
@@ -163,7 +152,7 @@ Parameters
 :default_route_type:
 
   ============== ===============
-  Type           Default   
+  Type           Default
   -------------- ---------------
   string         "BOUSTROPHEDON"
   ============== ===============
@@ -180,24 +169,24 @@ Parameters
   ============== ========
 
   Description
-    The default custom swath order for the route planner in the ``CUSTOM`` mode. The length of this custom order must be ``>= swaths.size()``. Only relevent when using the ``CUSTOM`` Route Type.
+    The default custom swath order for the route planner in the ``CUSTOM`` mode. The length of this custom order must be ``>= swaths.size()``. Only relevant when using the ``CUSTOM`` Route Type.
 
 :default_spiral_n:
 
   ============== ===============
-  Type           Default   
+  Type           Default
   -------------- ---------------
   int            4
   ============== ===============
 
   Description
-    Default number of swaths to skip and double back on to create a spiral pattern in the route. Only relevent when usign the ``SPIRAL`` Route Type. ``SNAKE`` is a special case when Spiral N = 2.
+    Default number of swaths to skip and double back on to create a spiral pattern in the route. Only relevant when using the ``SPIRAL`` Route Type. ``SNAKE`` is a special case when Spiral N = 2.
 
 
 :default_path_continuity_type:
 
   ============== ============
-  Type           Default   
+  Type           Default
   -------------- ------------
   string         "CONTINUOUS"
   ============== ============
@@ -208,7 +197,7 @@ Parameters
 :default_path_type:
 
   ============== ============
-  Type           Default   
+  Type           Default
   -------------- ------------
   string         "DUBIN"
   ============== ============
@@ -219,18 +208,18 @@ Parameters
 :default_turn_point_distance:
 
   ============== ============
-  Type           Default   
+  Type           Default
   -------------- ------------
   double         0.1
   ============== ============
 
   Description
-    Distance between points on the plan and route for sending back in paths (e.g. 0.1m). This impacts the density of the output turn paths and the overall nav paths. 
+    Distance between points on the plan and route for sending back in paths (e.g. 0.1m). This impacts the density of the output turn paths and the overall nav paths.
 
 :default_offset:
 
   ============== ============
-  Type           Default   
+  Type           Default
   -------------- ------------
   double         0.0
   ============== ============
@@ -241,13 +230,13 @@ Parameters
 :order_ids:
 
   ============== ============
-  Type           Default   
+  Type           Default
   -------------- ------------
   bool           0.0
   ============== ============
 
   Description
-    For ``opennav_row_coverage``, whether to reorder the parsed rows in the order of their ``id``s.
+    For ``opennav_row_coverage``, whether to reorder the parsed rows in the order of their ``id`` s.
 
 Example
 *******
@@ -255,7 +244,6 @@ Example
 
     coverage_server:
       ros__parameters:
-        action_server_result_timeout: 10.0
         coordinates_in_cartesian_frame: true
         robot_width: 2.1
         operation_width: 2.5

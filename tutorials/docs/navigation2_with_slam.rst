@@ -1,6 +1,6 @@
 .. _navigation2-with-slam:
 
-(SLAM) Navigating While Mapping
+Navigating while Mapping (SLAM)
 *******************************
 
 - `Overview`_
@@ -12,7 +12,7 @@ Overview
 
 This document explains how to use Nav2 with SLAM.
 The following steps show ROS 2 users how to generate occupancy grid maps and use Nav2 to move their robot around.
-This tutorial applies to both simulated and physical robots, but will be completed here on physical robot.
+This tutorial applies to both simulated and physical robots, but will be completed here on a physical robot.
 
 Before completing this tutorial, completing the :ref:`getting_started` is highly recommended especially if you are new to ROS and Navigation2.
 
@@ -25,13 +25,23 @@ Requirements
 You must install Navigation2, Turtlebot3, and SLAM Toolbox.
 If you don't have them installed, please follow :ref:`getting_started`.
 
+First, source your ROS 2 installation to set the environment variables:
+
+.. code-block:: bash
+
+  source /opt/ros/<ros2-distro>/setup.bash
+
 SLAM Toolbox can be installed via:
 
-  ``sudo apt install ros-<ros2-distro>-slam-toolbox``
+.. code-block:: bash
+
+  sudo apt install ros-$ROS_DISTRO-slam-toolbox
 
 or from built from source in your workspace with:
 
-  ``git clone -b <ros2-distro>-devel git@github.com:stevemacenski/slam_toolbox.git``
+.. code-block:: bash
+
+  git clone -b $ROS_DISTRO-devel git@github.com:stevemacenski/slam_toolbox.git
 
 
 Tutorial Steps
@@ -41,6 +51,20 @@ Tutorial Steps
 --------------------------
 
 For this tutorial, we will use the turtlebot3.
+The turtlebot3 software can be installed via the following or on the `turtlebot3 repository <https://github.com/ROBOTIS-GIT/turtlebot3>`_:
+
+First, source your ROS 2 installation to set the environment variables:
+
+.. code-block:: bash
+
+  source /opt/ros/<ros2-distro>/setup.bash
+
+Then install the Turtlebot3 packages:
+
+.. code-block:: bash
+
+  sudo apt install ros-$ROS_DISTRO-turtlebot3 ros-$ROS_DISTRO-turtlebot3-msgs ros-$ROS_DISTRO-turtlebot3-bringup
+
 If you have another robot, replace with your robot specific interfaces.
 Typically, this includes the robot state publisher of the URDF, simulated or physical robot interfaces, controllers, safety nodes, and the like.
 
@@ -50,7 +74,7 @@ Run the following commands first whenever you open a new terminal during this tu
 - ``export TURTLEBOT3_MODEL=waffle``
 
 
-Launch your robot's interface and robot state publisher,
+Launch your robot's interface and robot state publisher, for example:
 
   ``ros2 launch turtlebot3_bringup robot.launch.py``
 
@@ -59,7 +83,7 @@ Launch your robot's interface and robot state publisher,
 
 Launch Navigation without nav2_amcl and nav2_map_server.
 It is assumed that the SLAM node(s) will publish to /map topic and provide the map->odom transform.
-              
+
   ``ros2 launch nav2_bringup navigation_launch.py``
 
 2- Launch SLAM

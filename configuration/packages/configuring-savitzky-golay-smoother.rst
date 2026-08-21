@@ -5,7 +5,7 @@ Savitzky-Golay Smoother
 
 Source code on Github_.
 
-.. _Github: https://github.com/ros-planning/navigation2/tree/main/nav2_smoother
+.. _Github: https://github.com/ros-navigation/navigation2/tree/main/nav2_smoother
 
 The Savitzky-Golay Smoother is a Smoother Server plugin that will take in an input path and smooth it using a simple and fast smoothing technique based on `Savitzky Golay Filters <https://en.wikipedia.org/wiki/Savitzky%E2%80%93Golay_filter>`_. It uses a digital signal processing technique designed to reduce noise distorting a reference signal, in this case, a path.
 
@@ -19,12 +19,34 @@ This algorithm is deterministic and low-parameter. In the below image, some odd 
 Savitzky-Golay Smoother Parameters
 **********************************
 
+:window_size:
+
+  ============== ===========================
+  Type           Default
+  -------------- ---------------------------
+  int            7
+  ============== ===========================
+
+  Description
+    Size of the smoothing window. Must be an odd integer, with a minimum value of 3
+
+:poly_order:
+
+  ============== ===========================
+  Type           Default
+  -------------- ---------------------------
+  int            3
+  ============== ===========================
+
+  Description
+    Order of the polynomial used to fit the samples in each smoothing window
+
 :do_refinement:
 
   ============== ===========================
-  Type           Default                    
+  Type           Default
   -------------- ---------------------------
-  bool           True   
+  bool           True
   ============== ===========================
 
   Description
@@ -33,13 +55,24 @@ Savitzky-Golay Smoother Parameters
 :refinement_num:
 
   ============== ===========================
-  Type           Default                    
+  Type           Default
   -------------- ---------------------------
-  int            2   
+  int            2
   ============== ===========================
 
   Description
     Number of times to recursively smooth a segment
+
+:enforce_path_inversion:
+
+  ============== ===========================
+  Type           Default
+  -------------- ---------------------------
+  bool           True
+  ============== ===========================
+
+  Description
+    Whether to consider input path discontinuities as path inversions from feasible planning to be respected or smooth other them. Leave on for Smac Planner feasible planners, but may want to disable for NavFn or the Route Server.
 
 Example
 *******
@@ -50,9 +83,12 @@ Example
         costmap_topic: global_costmap/costmap_raw
         footprint_topic: global_costmap/published_footprint
         robot_base_frame: base_link
-        transform_timeout: 0.1
+        transform_tolerance: 0.1
         smoother_plugins: ["savitzky_golay_smoother"]
         savitzky_golay_smoother:
           plugin: "nav2_smoother::SavitzkyGolaySmoother"
+          window_size: 7
+          poly_order: 3
           do_refinement: True
           refinement_num: 2
+          enforce_path_inversion: True

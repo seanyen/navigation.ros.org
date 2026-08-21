@@ -22,7 +22,7 @@ Parameter
   ====== =======
 
   Description
-    	Tolerance of accepting pose as the goal (m).
+      Tolerance of accepting pose as the goal (m).
 
 Example
 ^^^^^^^
@@ -40,15 +40,15 @@ Input Ports
 
 :goal:
 
-  ====== =======
-  Type   Default
-  ------ -------
-  string N/A
-  ====== =======
+  =============================== ========
+  Type                            Default
+  ------------------------------- --------
+  geometry_msgs::msg::PoseStamped N/A
+  =============================== ========
 
   Description
-    	Destination to check. Takes in a blackboard variable, e.g. "{goal}".
-    	The global reference frame is taken from the goal's header `frame_id` field.
+      Destination to check. Takes in a blackboard variable, e.g. "{goal}".
+      The global reference frame is taken from the goal's header `frame_id` field.
 
 :robot_base_frame:
 
@@ -59,7 +59,7 @@ Input Ports
   ====== ===========
 
   Description
-    	Robot base frame.
+      Robot base frame.
 
 Example
 ^^^^^^^

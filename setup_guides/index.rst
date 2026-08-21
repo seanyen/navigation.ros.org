@@ -13,23 +13,39 @@ This section is a collection of guides that aims to provide readers a good resou
 
 To guide you through the first-time setup of your robot, we will be tackling the following topics:
 
-- Introduce TF2 and setup your robot URDF
+- Introduce TF2 and setup your robot URDF & SDF
+
 - Setup sensor sources for robot odometry
 - Setup sensor sources for perception
 - Configure round or arbitrary shaped footprints for your robot
-- Select and set up planner and controller navigation plugins for your robot's navigation tasks  
+- Select and set up planner and controller navigation plugins for your robot's navigation tasks
 - Lifecycle node management for easy bringup of other related sensors or nodes
 
-**Table of Contents:**
+There are tutorials below for the Gazebo Classic simulator and the Gazebo simulator. Gazebo Classic is used with ROS 2 Humble and previous ROS distributions, while Gazebo (Gazebo Harmonic or newer) is used with ROS 2 Jazzy or newer.
+
+Choose the appropriate guide based on your ROS 2 distribution:
+
+.. raw:: html
+
+   <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
+     <div>
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
-   transformation/setup_transforms.rst
-   urdf/setup_urdf.rst
-   odom/setup_odom.rst
-   sensors/setup_sensors.rst
-   footprint/setup_footprint.rst
-   algorithm/select_algorithm.rst
+   gazebo.rst
 
-.. note:: These tutorials are not meant to be full tuning and configuration guides since they only aim to help you get your robot up and running with a basic configuration. For more detailed discussions and guides on how to customize and tune Nav2 for your robot, head on to the :ref:`configuration` section.
+.. raw:: html
+
+     </div>
+     <div>
+
+.. toctree::
+   :maxdepth: 2
+
+   gazebo_classic.rst
+
+.. raw:: html
+
+     </div>
+   </div>

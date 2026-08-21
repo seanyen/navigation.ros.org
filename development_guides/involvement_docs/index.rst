@@ -92,7 +92,7 @@ developer. In the commit message of the contribution, (described more
 fully later in this document), the developer simply adds a
 ``Signed-off-by`` statement and thereby agrees to the DCO.
 
-In practice, its easier to just ``git commit -s -m "commit messsage."``.
+In practice, its easier to just ``git commit -s -m "commit message."``.
 Where ``-s`` adds this automatically.
 If you forgot to add this to a commit, it is easy to append via: ``git commit --amend -s``.
 
@@ -100,7 +100,7 @@ When a developer submits a patch, it is a commitment that the
 contributor has the right to submit the patch per the license.  The DCO
 agreement is shown below and at http://developercertificate.org/.
 
-.. code-block:: none
+.. code-block:: text
 
     Developer's Certificate of Origin 1.1
 
@@ -128,4 +128,3 @@ agreement is shown below and at http://developercertificate.org/.
         sign-off) is maintained indefinitely and may be redistributed
         consistent with this project or the open source license(s)
         involved.
-

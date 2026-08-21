@@ -17,9 +17,9 @@ Parameters
 :update_duration:
 
   ============== ==============
-  Type           Default                                               
+  Type           Default
   -------------- --------------
-  double         0.01          
+  double         0.01
   ============== ==============
 
   Description
@@ -28,9 +28,9 @@ Parameters
 :base_frame_id:
 
   ============== ==============
-  Type           Default                                               
+  Type           Default
   -------------- --------------
-  string         "base_link"          
+  string         "base_link"
   ============== ==============
 
   Description
@@ -39,9 +39,9 @@ Parameters
 :odom_frame_id:
 
   ============== ==============
-  Type           Default                                               
+  Type           Default
   -------------- --------------
-  string         "odom"          
+  string         "odom"
   ============== ==============
 
   Description
@@ -50,9 +50,9 @@ Parameters
 :map_frame_id:
 
   ============== ==============
-  Type           Default                                               
+  Type           Default
   -------------- --------------
-  string         "map"      
+  string         "map"
   ============== ==============
 
   Description
@@ -61,13 +61,170 @@ Parameters
 :scan_frame_id:
 
   ============== ==============
-  Type           Default                                               
+  Type           Default
   -------------- --------------
-  string         "base_scan"    
+  string         "base_scan"
   ============== ==============
 
   Description
-    The scan frame to use to publish a scan for collision monitor's happiness
+    The scan frame to use to publish a scan
+
+:enable_stamped_cmd_vel:
+
+  ============== ==============
+  Type           Default
+  -------------- --------------
+  string         True
+  ============== ==============
+
+  Description
+    Whether cmd_vel is stamped or unstamped (i.e. Twist or TwistStamped).
+    Note: This parameter is default ``false`` in Jazzy or older! Kilted or newer uses ``TwistStamped`` by default.
+
+:scan_publish_dur:
+
+  ============== ==============
+  Type           Default
+  -------------- --------------
+  double         0.1
+  ============== ==============
+
+  Description
+    The duration between publishing scan (in sec)
+
+:odom_publish_dur:
+
+  ============== =================
+  Type           Default
+  -------------- -----------------
+  double         <update_duration>
+  ============== =================
+
+  Description
+    The duration between publishing odometry (in sec). Defaults to ``update_duration``.
+
+:publish_map_odom_tf:
+
+  ============== ==============
+  Type           Default
+  -------------- --------------
+  bool           true
+  ============== ==============
+
+  Description
+    Whether or not to publish tf from ``map_frame_id`` to ``odom_frame_id``
+
+:publish_scan:
+
+  ============== ==============
+  Type           Default
+  -------------- --------------
+  bool           true
+  ============== ==============
+
+  Description
+    Whether or not to publish a fake laser scan.
+
+:publish_clock:
+
+  ============== ==============
+  Type           Default
+  -------------- --------------
+  bool           true
+  ============== ==============
+
+  Description
+    Whether or not to publish simulated clock to ``/clock``
+
+:speed_factor:
+
+  ============== ==============
+  Type           Default
+  -------------- --------------
+  double         1.0
+  ============== ==============
+
+  Description
+    Speed factor for the simulated clock, e.g. ``2.0`` runs simulation at 2x wall time.
+    Only used when ``publish_clock`` is ``true``. Dynamically reconfigurable.
+
+:scan_range_min:
+
+  ============== ==============
+  Type           Default
+  -------------- --------------
+  double         0.05
+  ============== ==============
+
+  Description
+    Minimum measurable distance from the scan in meters. Values below this are considered invalid.
+
+:scan_range_max:
+
+  ============== ==============
+  Type           Default
+  -------------- --------------
+  double         30.0
+  ============== ==============
+
+  Description
+    Maximum measurable distance from the scan in meters. Values beyond this are out of range.
+
+:scan_angle_min:
+
+  ============== ==============
+  Type           Default
+  -------------- --------------
+  double         -3.14
+  ============== ==============
+
+  Description
+    Starting angle of the scan in radians (leftmost angle)
+
+:scan_angle_max:
+
+  ============== ==============
+  Type           Default
+  -------------- --------------
+  double         3.14
+  ============== ==============
+
+  Description
+    Ending angle of the scan in radians (rightmost angle)
+
+:scan_angle_increment:
+
+  ============== ==============
+  Type           Default
+  -------------- --------------
+  double         0.0261
+  ============== ==============
+
+  Description
+    Angular resolution of the scan in radians (angle between consecutive measurements)
+
+:scan_use_inf:
+
+  ============== ==============
+  Type           Default
+  -------------- --------------
+  bool           true
+  ============== ==============
+
+  Description
+    Whether to use ``inf`` for out-of-range values.
+    If ``false``, values are set to ``scan_range_max - 0.1`` instead.
+
+:scan_noise_std:
+
+  ============== ==============
+  Type           Default
+  -------------- --------------
+  double         0.01
+  ============== ==============
+
+  Description
+    Standard deviation of Gaussian noise added to scan ranges (in meters).
 
 Example
 *******
@@ -80,3 +237,13 @@ Example
         map_frame_id: "map"
         scan_frame_id: "base_scan"  # tb4_loopback_simulator.launch.py remaps to 'rplidar_link'
         update_duration: 0.02
+        publish_scan: true
+        publish_clock: true
+        speed_factor: 1.0
+        scan_range_min: 0.05
+        scan_range_max: 30.0
+        scan_angle_min: -3.1415
+        scan_angle_max: 3.1415
+        scan_angle_increment: 0.02617
+        scan_use_inf: true
+        scan_noise_std: 0.01

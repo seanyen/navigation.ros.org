@@ -7,7 +7,7 @@ It is used to select the Smoother that will be used by the Smoother server. It s
 
 Any publisher to this topic needs to be configured with some QoS defined as ``reliable`` and ``transient local``.
 
-.. _bt_navigator: https://github.com/ros-planning/navigation2/tree/main/nav2_bt_navigator
+.. _bt_navigator: https://github.com/ros-navigation/navigation2/tree/main/nav2_bt_navigator
 
 Input Ports
 -----------
@@ -17,22 +17,22 @@ Input Ports
   ====== =======
   Type   Default
   ------ -------
-  string smoother_selector  
+  string smoother_selector
   ====== =======
 
   Description
-    	The name of the topic used to received select command messages. This is used to support multiple SmootherSelector nodes. 
-      
+      The name of the topic used to received select command messages. This is used to support multiple SmootherSelector nodes.
+
 :default_smoother:
 
   ====== =======
   Type   Default
   ------ -------
-  string N/A  
+  string N/A
   ====== =======
 
   Description
-    	The default value for the selected Smoother if no message is received from the input topic.
+      The default value for the selected Smoother if no message is received from the input topic.
 
 
 Output Ports
@@ -43,11 +43,11 @@ Output Ports
   ====== =======
   Type   Default
   ------ -------
-  string N/A  
+  string N/A
   ====== =======
 
   Description
-    	The output selected Smoother id.
+      The output selected Smoother id.
 
 
 Example

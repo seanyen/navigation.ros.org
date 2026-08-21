@@ -10,14 +10,14 @@ Input Ports
 
 :initial_pose_received:
 
-  =====  ========================
-  Type   Default
+  ===== =========================
+  Type  Default
   ----- -------------------------
   bool  "{initial_pose_received}"
   ===== =========================
 
   Description
-    	Success if the value in the port is true. Takes in a blackboard variable,
+      Success if the value in the port is true. Takes in a blackboard variable,
         "{initial_pose_received}" if not specified.
 
 Example

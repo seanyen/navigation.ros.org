@@ -13,7 +13,7 @@ Parameters
   ====== =======
   Type   Default
   ------ -------
-  double 0.0    
+  double 0.0
   ====== =======
 
   Description
@@ -24,7 +24,7 @@ Parameters
   ====== =======
   Type   Default
   ------ -------
-  double 0.0    
+  double 0.0
   ====== =======
 
   Description
@@ -35,7 +35,7 @@ Parameters
   ====== =======
   Type   Default
   ------ -------
-  double 0.0    
+  double 0.0
   ====== =======
 
   Description
@@ -46,7 +46,7 @@ Parameters
   ====== =======
   Type   Default
   ------ -------
-  double 0.0    
+  double 0.0
   ====== =======
 
   Description
@@ -57,18 +57,18 @@ Parameters
   ====== =======
   Type   Default
   ------ -------
-  double 0.0    
+  double 0.0
   ====== =======
 
   Description
-    	Minimum velocity X (m/s).
+      Minimum velocity X (m/s).
 
 :``<dwb plugin>``.min_vel_y:
 
   ====== =======
   Type   Default
   ------ -------
-  double 0.0    
+  double 0.0
   ====== =======
 
   Description
@@ -79,18 +79,18 @@ Parameters
   ====== =======
   Type   Default
   ------ -------
-  double 0.0    
+  double 0.0
   ====== =======
 
   Description
-    	Maximum velocity X (m/s).
+      Maximum velocity X (m/s).
 
 :``<dwb plugin>``.max_vel_y:
 
   ====== =======
   Type   Default
   ------ -------
-  double 0.0    
+  double 0.0
   ====== =======
 
   Description
@@ -101,18 +101,18 @@ Parameters
   ====== =======
   Type   Default
   ------ -------
-  double 0.0    
+  double 0.0
   ====== =======
 
   Description
-    	Maximum acceleration X (m/s^2).
+      Maximum acceleration X (m/s^2).
 
 :``<dwb plugin>``.acc_lim_y:
 
   ====== =======
   Type   Default
   ------ -------
-  double 0.0    
+  double 0.0
   ====== =======
 
   Description
@@ -123,18 +123,18 @@ Parameters
   ====== =======
   Type   Default
   ------ -------
-  double 0.0    
+  double 0.0
   ====== =======
 
   Description
-    	Maximum acceleration rotation (rad/s^2).
+      Maximum acceleration rotation (rad/s^2).
 
 :``<dwb plugin>``.decel_lim_x:
 
   ====== =======
   Type   Default
   ------ -------
-  double 0.0    
+  double 0.0
   ====== =======
 
   Description
@@ -145,7 +145,7 @@ Parameters
   ====== =======
   Type   Default
   ------ -------
-  double 0.0    
+  double 0.0
   ====== =======
 
   Description
